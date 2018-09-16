@@ -1,7 +1,7 @@
 //document.addEventListener('keyup', onKeyUp);
 //document.addEventListener('keydown', onKeyDown);
 
-//import * as math from 'mathjs'
+const math = require('mathjs');
 
 var canvas = document.getElementById("canvas");
 var ctx = canvas.getContext("2d");
@@ -179,6 +179,7 @@ function bezierCurve () {
     if (controlPoints.length < 2)
         return;
     
+    console.log(math.sqrt(-4));
     curvePoints.length = 0; //clear array
 
     let lastIndex = 0;
