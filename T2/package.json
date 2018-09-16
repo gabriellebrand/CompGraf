@@ -1,0 +1,16 @@
+{
+  "name": "T2",
+  "version": "1.0.0",
+  "description": "",
+  "main": "bezier.js",
+  "dependencies": {
+    "mathjs": "^5.1.2"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
