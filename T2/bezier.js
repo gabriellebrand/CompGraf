@@ -78,6 +78,7 @@ function onMouseUp(evt)
         clearPath();
     }
     else if (controlPoints.length >= 2) {
+       //calculateControlPoints();
         bezierCurve();
     }
 
@@ -173,8 +174,7 @@ function addLinearSegment(ctrlPts) {
 function bezierCurve () {
     if (controlPoints.length < 2)
         return;
-    
-    console.log(math.sqrt(-4));
+
     curvePoints.length = 0; //clear array
 
     let lastIndex = 0;
@@ -201,6 +201,26 @@ function bezierCurve () {
         addLinearSegment(ctrls);
     }
 
+}
+
+function calculateControlPoints() {
+    let ctrls = [];
+    let A = [[2, -1,  0,  0],
+             [0,  1,  1,  0],
+             [1, -2,  2, -1], 
+             [0,  0, -1,  2]];
+    
+    let bx = [controlPoints[0].x, 2*controlPoints[1].x, 0, controlPoints[2].x];
+    let by = [controlPoints[0].y, 2*controlPoints[1].y, 0, controlPoints[2].y];
+
+    let resX = math.usolve(A, bx);
+    let resY = math.usolve(A, by);
+
+    controlPoints.length = 0;
+    for (i=0; i<4; i++) {
+        controlPoints.push({x: resX[i], y: resY[i]});
+    }
+    bezierCurve();
 }
 
 function redraw()
