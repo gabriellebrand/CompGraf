@@ -1,8 +1,9 @@
 var canvas = document.getElementById("canvas");
 var ctx = canvas.getContext("2d");
 var controlPoints = [];
-var guidePt = {x:0, y:0};
+var inputPoints = [];
 var curvePoints = [];
+var guidePt = {x:0, y:0};
 
 var isDeleting = false;
 var isEditing = false;
@@ -67,18 +68,18 @@ function onMouseUp(evt)
     let point = getMousePos(evt);
 
     if (isDeleting) {
-        let ptIndex = searchPoint(controlPoints, point);
-            controlPoints.splice(ptIndex, 1); //remove ponto da curva
+        let ptIndex = searchPoint(inputPoints, point);
+            inputPoints.splice(ptIndex, 1); //remove ponto da curva
     }
     else {
-        controlPoints.push(point);
+        inputPoints.push(point);
     }
     
-    if (controlPoints.length > 100) {
+    if (inputPoints.length > 100) {
         clearPath();
     }
-    else if (controlPoints.length >= 2) {
-       //calculateControlPoints();
+    else if (inputPoints.length == 3) {
+       calculateControlPoints();
         bezierCurve();
     }
 
@@ -172,7 +173,7 @@ function addLinearSegment(ctrlPts) {
 * Calcula todos os segmentos de bezier da curva total
 */
 function bezierCurve () {
-    if (controlPoints.length < 2)
+    if (controlPoints.length < 3)
         return;
 
     curvePoints.length = 0; //clear array
@@ -187,6 +188,7 @@ function bezierCurve () {
         lastIndex = i;
         addCubicSegment(ctrls);
     }
+    /*
     if (lastIndex + 3 == controlPoints.length ) {
         let ctrls = [];
         ctrls[0] = controlPoints[lastIndex];
@@ -199,46 +201,86 @@ function bezierCurve () {
         ctrls[0] = controlPoints[lastIndex];
         ctrls[1] = controlPoints[lastIndex+1];
         addLinearSegment(ctrls);
-    }
+    } 
+    */
 
 }
 
 function calculateControlPoints() {
-    let ctrls = [];
-    let A = [[2, -1,  0,  0],
-             [0,  1,  1,  0],
-             [1, -2,  2, -1], 
-             [0,  0, -1,  2]];
+    let len0 = math.distance([inputPoints[0].x,inputPoints[0].y],
+                             [inputPoints[1].x,inputPoints[1].y]);
+    let len1 = math.distance([inputPoints[1].x,inputPoints[1].y],
+                             [inputPoints[2].x,inputPoints[2].y]);
+    let rho = len0/(len0+len1);
+
+    let r00 = r0(inputPoints[0], inputPoints[1], inputPoints[2], rho);
+    let l11 = l1(inputPoints[0], inputPoints[1], inputPoints[2], rho);
+    let r11 = r1(inputPoints[0], inputPoints[1], inputPoints[2], rho);
+    let l22 = l2(inputPoints[0], inputPoints[1], inputPoints[2], rho);
+
+    controlPoints.length = 0; //clear array
     
-    let bx = [controlPoints[0].x, 2*controlPoints[1].x, 0, controlPoints[2].x];
-    let by = [controlPoints[0].y, 2*controlPoints[1].y, 0, controlPoints[2].y];
+    controlPoints.push(inputPoints[0]);
+    controlPoints.push(r00);
+    controlPoints.push(l11);
+    controlPoints.push(inputPoints[1]);
+    controlPoints.push(r11);
+    controlPoints.push(l22);
+    controlPoints.push(inputPoints[2]);
 
-    let resX = math.usolve(A, bx);
-    let resY = math.usolve(A, by);
+    console.log(controlPoints);
 
-    controlPoints.length = 0;
-    for (i=0; i<4; i++) {
-        controlPoints.push({x: resX[i], y: resY[i]});
-    }
     bezierCurve();
+}
+
+function r0 (p0, p1, p2, rho) {
+    return {x: (1/6)*(p0.x*rho+3*p0.x+3*p1.x-p2.x*rho),
+            y: (1/6)*(p0.y*rho+3*p0.y+3*p1.y-p2.y*rho)};
+}
+
+function l1 (p0, p1, p2, rho) {
+    return {x: (1/3)*(p0.x*rho+3*p1.x-p2.x*rho),
+            y: (1/3)*(p0.y*rho+3*p1.y-p2.y*rho)};
+}
+
+function r1 (p0, p1, p2, rho) {
+    return {x: (1/3)*(p0.x*rho-p0.x+3*p1.x-p2.x*rho+p2.x),
+            y: (1/3)*(p0.y*rho-p0.y+3*p1.y-p2.y*rho+p2.y)};
+}
+
+function l2 (p0, p1, p2, rho) {
+    return {x: (1/6)*(p0.x*rho-p0.x+3*p1.x-p2.x*rho+4*p2.x),
+            y: (1/6)*(p0.y*rho-p0.y+3*p1.y-p2.y*rho+4*p2.y)};
 }
 
 function redraw()
 {
 	ctx.clearRect(0,0,canvas.width,canvas.height);
 
-	ctx.strokeStyle = "#505050";
-	ctx.lineWidth = 3;
-	ctx.lineJoin = "round";
-	ctx.beginPath();
-	for(let i = 0; i < controlPoints.length; ++i)
-	{
-		ctx.lineTo(controlPoints[i].x,controlPoints[i].y);
-    }
-    ctx.lineTo(guidePt.x,guidePt.y);
-	ctx.stroke();
+	// ctx.strokeStyle = "#505050";
+	// ctx.lineWidth = 3;
+	// ctx.lineJoin = "round";
+	// ctx.beginPath();
+	// for(let i = 0; i < controlPoints.length; ++i)
+	// {
+	// 	ctx.lineTo(controlPoints[i].x,controlPoints[i].y);
+    // }
+    // ctx.lineTo(guidePt.x,guidePt.y);
+	// ctx.stroke();
 
-    ctx.fillStyle = "#0000FF";
+    ctx.fillStyle = "#FF0000";
+    ctx.lineWidth = 1;
+	for(let i = 0; i < inputPoints.length; ++i)
+	{
+		ctx.beginPath();
+		ctx.arc(inputPoints[i].x,inputPoints[i].y, 5, 0, 2*Math.PI, true);
+		ctx.fill();
+    }
+    ctx.beginPath();
+	ctx.arc(guidePt.x,guidePt.y, 5, 0, 2*Math.PI, true);
+    ctx.fill();
+    
+    ctx.fillStyle = "#00FFFF";
     ctx.lineWidth = 1;
 	for(let i = 0; i < controlPoints.length; ++i)
 	{
@@ -246,9 +288,6 @@ function redraw()
 		ctx.arc(controlPoints[i].x,controlPoints[i].y, 5, 0, 2*Math.PI, true);
 		ctx.fill();
     }
-    ctx.beginPath();
-	ctx.arc(guidePt.x,guidePt.y, 5, 0, 2*Math.PI, true);
-	ctx.fill();
     
     ctx.fillStyle = "#FFFFFF";
     ctx.lineWidth = 2;
@@ -259,71 +298,3 @@ function redraw()
 		ctx.fill();
 	}
 }
-
-/*
-var abs = Math.abs;
-
-function array_fill(i, n, v) {
-    var a = [];
-    for (; i < n; i++) {
-        a.push(v);
-    }
-    return a;
-}
-
-function gauss(A, x) {
-
-    var i, k, j;
-
-    // Just make a single matrix
-    for (i=0; i < A.length; i++) { 
-        A[i].push(x[i]);
-        console.log(A[i]);
-    }
-    var n = A.length;
-
-    for (i=0; i < n; i++) { 
-        // Search for maximum in this column
-        var maxEl = abs(A[i][i]),
-            maxRow = i;
-        for (k=i+1; k < n; k++) { 
-            if (abs(A[k][i]) > maxEl) {
-                maxEl = abs(A[k][i]);
-                maxRow = k;
-            }
-        }
-
-
-        // Swap maximum row with current row (column by column)
-        for (k=i; k < n+1; k++) { 
-            var tmp = A[maxRow][k];
-            A[maxRow][k] = A[i][k];
-            A[i][k] = tmp;
-        }
-
-        // Make all rows below this one 0 in current column
-        for (k=i+1; k < n; k++) { 
-            var c = -A[k][i]/A[i][i];
-            for (j=i; j < n+1; j++) { 
-                if (i===j) {
-                    A[k][j] = 0;
-                } else {
-                    A[k][j] += c * A[i][j];
-                }
-            }
-        }
-    }
-
-    // Solve equation Ax=b for an upper triangular matrix A
-    x = array_fill(0, n, 0);
-    for (i=n-1; i > -1; i--) { 
-        x[i] = A[i][n]/A[i][i];
-        for (k=i-1; k > -1; k--) { 
-            A[k][n] -= A[k][i] * x[i];
-        }
-    }
-
-    return x;
-}
-
-*/
