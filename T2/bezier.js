@@ -1,5 +1,6 @@
 var canvas = document.getElementById("canvas");
 var ctx = canvas.getContext("2d");
+var bezierPoints = [];
 var controlPoints = [];
 var inputPoints = [];
 var curvePoints = [];
@@ -78,7 +79,7 @@ function onMouseUp(evt)
     if (inputPoints.length > 100) {
         clearPath();
     }
-    else if (inputPoints.length == 3) {
+    else if (inputPoints.length >= 2) {
        calculateControlPoints();
         bezierCurve();
     }
@@ -99,10 +100,11 @@ function clearPath() {
 * Busca o ponto mais próximo em um raio de 4 px
 */
 function searchPoint(ptsArray, point) {
+    let radius = 4;
     for (let i = 0; i < ptsArray.length; i++) {
         let dtX = Math.abs(ptsArray[i].x - point.x);
         let dtY = Math.abs(ptsArray[i].y - point.y);
-        if (dtX < 4 && dtY < 4) {
+        if (dtX < radius && dtY < radius) {
             return i;
         }
     }
@@ -116,8 +118,7 @@ function searchPoint(ptsArray, point) {
 function calculateStepSize(ctrlPts) {
     var dist = 0;
     for (let i = 1; i < ctrlPts.length; i++) {
-        dist += Math.sqrt((ctrlPts[i].x - ctrlPts[i-1].x)**2
-                + (ctrlPts[i].y - ctrlPts[i-1].y)**2)
+        dist += getDistance(ctrlPts[i], ctrlPts[i-1]);
     }
 
     return 1/Math.floor(dist);
@@ -126,14 +127,14 @@ function calculateStepSize(ctrlPts) {
 /*
 * Adiciona na curva um segmento de bezier cúbica
 */
-function addCubicSegment(ctrlPts) {
-    let tStep = calculateStepSize(ctrlPts);
+function addCubicSegment(p0, r, l, p1) {
+    let tStep = calculateStepSize([p0, r, l, p1]);
     for (let t = 0; t < 1; t+= tStep) {
         let factors = [(1-t)**3, 3*t*((1-t)**2), 3*t*t*(1-t), t**3];
-        let x = factors[0]*ctrlPts[0].x + factors[1]*ctrlPts[1].x +
-                factors[2]*ctrlPts[2].x + factors[3]*ctrlPts[3].x;
-        let y = factors[0]*ctrlPts[0].y + factors[1]*ctrlPts[1].y +
-                factors[2]*ctrlPts[2].y + factors[3]*ctrlPts[3].y;
+        let x = factors[0]*p0.x + factors[1]*r.x +
+                factors[2]*l.x + factors[3]*p1.x;
+        let y = factors[0]*p0.y + factors[1]*r.y +
+                factors[2]*l.y + factors[3]*p1.y;
         
         curvePoints.push({x: x, y: y});
     }
@@ -173,64 +174,79 @@ function addLinearSegment(ctrlPts) {
 * Calcula todos os segmentos de bezier da curva total
 */
 function bezierCurve () {
-    if (controlPoints.length < 3)
-        return;
-
-    curvePoints.length = 0; //clear array
-
-    let lastIndex = 0;
-    for(let i = 3; i < controlPoints.length; i+=3) {
-        let ctrls = [];
-        ctrls[0] = controlPoints[i-3];
-        ctrls[1] = controlPoints[i-2];
-        ctrls[2] = controlPoints[i-1];
-        ctrls[3] = controlPoints[i];
-        lastIndex = i;
-        addCubicSegment(ctrls);
+    curvePoints.length = 0;
+    for (let i=0; i<bezierPoints.length; i++) {
+        addCubicSegment(bezierPoints[i].p0, bezierPoints[i].r, 
+                        bezierPoints[i].l, bezierPoints[i].p1);
     }
-    /*
-    if (lastIndex + 3 == controlPoints.length ) {
-        let ctrls = [];
-        ctrls[0] = controlPoints[lastIndex];
-        ctrls[1] = controlPoints[lastIndex+1];
-        ctrls[2] = controlPoints[lastIndex+2];
-        addSquareSegment(ctrls);
-    }
-    else if (lastIndex + 2 == controlPoints.length) {
-        let ctrls = [];
-        ctrls[0] = controlPoints[lastIndex];
-        ctrls[1] = controlPoints[lastIndex+1];
-        addLinearSegment(ctrls);
-    } 
-    */
+}
 
+function getDistance(p1, p2) {
+    return Math.sqrt((p1.x - p2.x)**2 + (p1.y - p2.y)**2)
+}
+
+function getRho(p0, p1, p2) {
+    let len0 = getDistance(p0, p1);
+    let len1 = getDistance(p1, p2);
+    return len0/(len0+len1);
 }
 
 function calculateControlPoints() {
-    let len0 = math.distance([inputPoints[0].x,inputPoints[0].y],
-                             [inputPoints[1].x,inputPoints[1].y]);
-    let len1 = math.distance([inputPoints[1].x,inputPoints[1].y],
-                             [inputPoints[2].x,inputPoints[2].y]);
-    let rho = len0/(len0+len1);
-
-    let r00 = r0(inputPoints[0], inputPoints[1], inputPoints[2], rho);
-    let l11 = l1(inputPoints[0], inputPoints[1], inputPoints[2], rho);
-    let r11 = r1(inputPoints[0], inputPoints[1], inputPoints[2], rho);
-    let l22 = l2(inputPoints[0], inputPoints[1], inputPoints[2], rho);
-
-    controlPoints.length = 0; //clear array
-    
-    controlPoints.push(inputPoints[0]);
-    controlPoints.push(r00);
-    controlPoints.push(l11);
-    controlPoints.push(inputPoints[1]);
-    controlPoints.push(r11);
-    controlPoints.push(l22);
-    controlPoints.push(inputPoints[2]);
-
-    console.log(controlPoints);
+    bezierPoints.length = 0;
+    if (inputPoints.length == 2) {
+        let segment = calculate2PointsSegment(inputPoints[0], inputPoints[1]);
+        bezierPoints.push(segment);
+    }
+    else if (inputPoints.length >= 3) {
+        calculate3PointsSegment(inputPoints[0], inputPoints[1], inputPoints[2])
+        for (i=3; i<inputPoints.length; i++) {
+            calculateNextPointSegment(inputPoints[i]);
+        }
+    }
 
     bezierCurve();
+}
+
+/* 
+* Calcula pontos de controle do segmento da bezier
+* para somente dois pontos (reta)
+*/
+function calculate2PointsSegment(p0, p1) {
+    return {
+        p0: p0,
+        r:{ x: p0.x + (1/3)*(p1.x - p0.x), y: p0.y + (1/3)*(p1.y - p0.y) },
+        l:{ x: p0.x + (2/3)*(p1.x - p0.x), y: p0.y + (2/3)*(p1.y - p0.y) },
+        p1: p1
+    };
+}
+
+/*
+* Calcula pontos de controle do segmento da bezier para 3 pontos.
+* As funções auxiliares r0, l1, r1 e l2 são as soluções para o sistema
+* [2    -1      0   0][r0] = [p0]
+* [0  (1-rho)  rho  0][l1] = [p1]
+* [1    -2      2  -1][r1] = [0]
+* [0     0     -1   2][l2] = [p2]
+*/
+function calculate3PointsSegment(p0, p1, p2) {
+    let rho = getRho(p0, p1, p2);
+
+    let segment1 = {
+        p0: p0,
+        r:  r0(p0, p1, p2, rho),
+        l:  l1(p0, p1, p2, rho),
+        p1: p1
+    };
+
+    let segment2 = {
+        p0: p1,
+        r:  r1(p0, p1, p2, rho),
+        l:  l2(p0, p1, p2, rho),
+        p1: p2
+    };
+
+    bezierPoints.push(segment1);
+    bezierPoints.push(segment2);
 }
 
 function r0 (p0, p1, p2, rho) {
@@ -251,6 +267,44 @@ function r1 (p0, p1, p2, rho) {
 function l2 (p0, p1, p2, rho) {
     return {x: (1/6)*(p0.x*rho-p0.x+3*p1.x-p2.x*rho+4*p2.x),
             y: (1/6)*(p0.y*rho-p0.y+3*p1.y-p2.y*rho+4*p2.y)};
+}
+
+/*
+* Calcula pontos de controle do segmento da bezier no método construtivo.
+* As funções auxiliares r0, ln_1, rn, ln são as soluções para o sistema
+* [(1-rho)  rho   0][ln_1] = [pn_1]
+* [  -2      2   -1][rn]   = [-rn_1]
+* [  0      -1    2][ln]   = [pn]
+*/
+function calculateNextPointSegment(p) {
+    let lastSegment = bezierPoints[bezierPoints.length-1];
+    let rho = getRho(lastSegment.p0, lastSegment.p1, p);
+    bezierPoints[bezierPoints.length-1].l = ln_1(lastSegment.r, p, 
+                                                 lastSegment.p1, rho);
+    let rn_pt = rn(lastSegment.r, p, lastSegment.p1, rho);
+    let ln_pt = ln(lastSegment.r, p, lastSegment.p1, rho);
+    bezierPoints.push({p0: lastSegment.p1, r: rn_pt, l: ln_pt, p1: p});
+}
+
+function ln_1(rn_1, p, pn_1, rho) {
+    return {
+        x: (2*rho*rn_1.x - rho*p.x + 3*pn_1.x)/(rho + 3),
+        y: (2*rho*rn_1.y - rho*p.y + 3*pn_1.y)/(rho + 3)
+    }
+}
+
+function rn(rn_1, p, pn_1, rho) {
+    return {
+        x: (2*(rho-1)*rn_1.x + p.x*(1-rho) + 4*pn_1.x)/(rho + 3),
+        y: (2*(rho-1)*rn_1.y + p.y*(1-rho) + 4*pn_1.y)/(rho + 3)
+    }
+}
+
+function ln(rn_1, p, pn_1, rho) {
+    return {
+        x: (rn_1.x*(rho-1) + 2*(pn_1.x + p.x))/(rho + 3),
+        y: (rn_1.y*(rho-1) + 2*(pn_1.y + p.y))/(rho + 3)
+    } 
 }
 
 function redraw()
