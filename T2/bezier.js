@@ -5,7 +5,7 @@ var ctx = canvas.getContext("2d");
 var inputPoints = [];
 /*
 *   bezierPoints -> guarda todos os pontos de controle da bézier cúbica.
-*                   É um vetor com todos os segmentos que serão usados para calcular a curva.
+*                   É um vetor com todos os segmentos que serão usados para calcular as curvas.
 *                   Cada segmento possui um vetor com 4 elementos: 
 *                   segmento[0] -> p0 (ponto que passa pela curva)
 *                   segmento[1] -> r  (1o ponto de controle)
@@ -106,7 +106,7 @@ function onMouseUp(evt)
 
 
 /*
-*   Aplica ajustes nos pontos de interpolação.
+*   Aplica ajustes nos pontos de interpolação (p0, p1).
 *   Pela estrutura usada para armazenar os segmentos, cada ponto, excetos os terminais,
 *   está armazenado em dois segmentos, como p1 em um, e p0 em outro. É necessário aplicar a mesma translação 
 *   no ponto correspondente no segmento vizinho, além de aplicar no ponto de controle vizinho.
