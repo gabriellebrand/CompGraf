@@ -61,18 +61,6 @@ function onMouseMove(evt)
 	redraw();
 }
 
-function applyPointAdjustment(newPoint, ctrlPt, ptAdj, ctrlPtAdj, isTerminal, direction) {
-    let dx = newPoint.x - bezierPoints[editingPtIndex.index][editingPtIndex.type].x;
-    let dy = newPoint.y - bezierPoints[editingPtIndex.index][editingPtIndex.type].y;
-    bezierPoints[editingPtIndex.index][ctrlPt].x += dx;
-    bezierPoints[editingPtIndex.index][ctrlPt].y += dy;
-    if (!isTerminal) {
-        bezierPoints[editingPtIndex.index + direction][ptAdj] = newPoint;
-        bezierPoints[editingPtIndex.index + direction][ctrlPtAdj].x += dx;
-        bezierPoints[editingPtIndex.index + direction][ctrlPtAdj].y += dy;
-    }
-}
-
 function onMouseUp(evt)
 {
     if (isEditing) {
@@ -95,6 +83,18 @@ function onMouseUp(evt)
 	redraw();
 }
 
+function applyPointAdjustment(newPoint, ctrlPt, ptAdj, ctrlPtAdj, isTerminal, direction) {
+    let dx = newPoint.x - bezierPoints[editingPtIndex.index][editingPtIndex.type].x;
+    let dy = newPoint.y - bezierPoints[editingPtIndex.index][editingPtIndex.type].y;
+    bezierPoints[editingPtIndex.index][ctrlPt].x += dx;
+    bezierPoints[editingPtIndex.index][ctrlPt].y += dy;
+    if (!isTerminal) {
+        bezierPoints[editingPtIndex.index + direction][ptAdj] = newPoint;
+        bezierPoints[editingPtIndex.index + direction][ctrlPtAdj].x += dx;
+        bezierPoints[editingPtIndex.index + direction][ctrlPtAdj].y += dy;
+    }
+}
+
 /*
 * Limpa todos os pontos de controle e a curva
 */
@@ -106,21 +106,9 @@ function clearPath() {
 }
 
 /*
-* Busca o ponto mais próximo em um raio de 4 px
+*   Busca, em todos os segmentos, o ponto mais próximo em um raio de 4 px
+*   Retorna o índice do segmento e o tipo de ponto (p0=0, r=1, l=2, p1=3)
 */
-function searchPoint(ptsArray, point) {
-    let radius = 4;
-    for (let i = 0; i < ptsArray.length; i++) {
-        console.log(ptsArray);
-        let dtX = Math.abs(ptsArray[i].x - point.x);
-        let dtY = Math.abs(ptsArray[i].y - point.y);
-        if (dtX < radius && dtY < radius) {
-            return i;
-        }
-    }
-    return -1;
-}
-
 function searchControlPoint(point) {
     let radius = 4;
     for (let i = 0; i < bezierPoints.length; i++) {
@@ -148,8 +136,28 @@ function calculateStepSize(ctrlPts) {
     return 1/Math.floor(dist/2);
 }
 
+function getDistance(p1, p2) {
+    return Math.sqrt((p1.x - p2.x)**2 + (p1.y - p2.y)**2)
+}
+
+function getRho(p0, p1, p2) {
+    let len0 = getDistance(p0, p1);
+    let len1 = getDistance(p1, p2);
+    return len0/(len0+len1);
+}
+
 /*
-* Adiciona na curva um segmento de bezier cúbica
+*   Calcula os pontos de curva de todos os segmentos
+*/
+function bezierCurve () {
+    curvePoints.length = 0;
+    for (let i=0; i<bezierPoints.length; i++) {
+        addCubicSegment(bezierPoints[i]);
+    }
+}
+
+/*
+*   Adiciona na curva um segmento de bezier cúbica
 */
 function addCubicSegment(controlPts) {
     let tStep = calculateStepSize(controlPts);
@@ -162,26 +170,6 @@ function addCubicSegment(controlPts) {
         
         curvePoints.push({x: x, y: y});
     }
-}
-
-/*
-* Calcula todos os segmentos de bezier da curva total
-*/
-function bezierCurve () {
-    curvePoints.length = 0;
-    for (let i=0; i<bezierPoints.length; i++) {
-        addCubicSegment(bezierPoints[i]);
-    }
-}
-
-function getDistance(p1, p2) {
-    return Math.sqrt((p1.x - p2.x)**2 + (p1.y - p2.y)**2)
-}
-
-function getRho(p0, p1, p2) {
-    let len0 = getDistance(p0, p1);
-    let len1 = getDistance(p1, p2);
-    return len0/(len0+len1);
 }
 
 function calculateControlPoints() {
@@ -200,8 +188,8 @@ function calculateControlPoints() {
 }
 
 /* 
-* Calcula pontos de controle do segmento da bezier
-* para somente dois pontos (reta)
+*   Calcula pontos de controle do segmento da bezier
+*   para somente dois pontos (reta)
 */
 function calculate2PointsSegment(p0, p1) {
     return [p0, {x: p0.x + (1/3)*(p1.x - p0.x), y: p0.y + (1/3)*(p1.y - p0.y)},
@@ -209,12 +197,12 @@ function calculate2PointsSegment(p0, p1) {
 }
 
 /*
-* Calcula pontos de controle do segmento da bezier para 3 pontos.
-* As funções auxiliares r0, l1, r1 e l2 são as soluções para o sistema
-* [2    -1      0   0][r0] = [p0]
-* [0  (1-rho)  rho  0][l1] = [p1]
-* [1    -2      2  -1][r1] = [0]
-* [0     0     -1   2][l2] = [p2]
+*   Calcula pontos de controle do segmento da bezier para 3 pontos.
+*   As funções auxiliares r0, l1, r1 e l2 são as soluções para o sistema
+*   [2    -1      0   0][r0] = [p0]
+*   [0  (1-rho)  rho  0][l1] = [p1]
+*   [1    -2      2  -1][r1] = [0]
+*   [0     0     -1   2][l2] = [p2]
 */
 function calculate3PointsSegment(p0, p1, p2) {
     let rho = getRho(p0, p1, p2);
@@ -250,17 +238,17 @@ function l2 (p0, p1, p2, rho) {
 }
 
 /*
-* Calcula pontos de controle do segmento da bezier no método construtivo.
-* As funções auxiliares r0, ln_1, rn, ln são as soluções para o sistema
-* [(1-rho)  rho   0][ln_1] = [pn_1]
-* [  -2      2   -1][rn]   = [-rn_1]
-* [  0      -1    2][ln]   = [pn]
+*   Calcula pontos de controle do segmento da bezier no método construtivo.
+*   As funções auxiliares r0, ln_1, rn, ln são as soluções para o sistema
+*   [(1-rho)  rho   0][ln_1] = [pn_1]
+*   [  -2      2   -1][rn]   = [-rn_1]
+*   [  0      -1    2][ln]   = [pn]
 */
 function calculateNextPointSegment(p) {
     let lastSegment = bezierPoints[bezierPoints.length-1];
     let rho = getRho(lastSegment[0], lastSegment[3], p);
     bezierPoints[bezierPoints.length-1][2] = ln_1(lastSegment[1], p, 
-                                                 lastSegment[2], rho);
+                                                  lastSegment[3], rho);
     let rn_pt = rn(lastSegment[1], p, lastSegment[3], rho);
     let ln_pt = ln(lastSegment[1], p, lastSegment[3], rho);
     bezierPoints.push([lastSegment[3], rn_pt, ln_pt, p]);
@@ -289,19 +277,38 @@ function ln(rn_1, p, pn_1, rho) {
 
 function redraw()
 {
-	ctx.clearRect(0,0,canvas.width,canvas.height);
-
-    ctx.fillStyle = "#FF0000";
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    
     ctx.lineWidth = 1;
-    ctx.beginPath();
-	ctx.arc(guidePt.x,guidePt.y, 5, 0, 2*Math.PI, true);
-    ctx.fill();
-    if (inputPoints.length == 1) {
+    // caso de não haver curvas
+    if (inputPoints.length <= 1) {
+        //desenha o primeiro ponto
+        ctx.fillStyle = "#FF0000";
+        if (inputPoints.length == 1) {
+            ctx.beginPath();
+		    ctx.arc(inputPoints[0].x,inputPoints[0].y, 5, 0, 2*Math.PI, true);
+            ctx.fill();
+        }
+        
+        //desenha o ponto guia
+        ctx.fillStyle = "#FFFF00";
         ctx.beginPath();
-		ctx.arc(inputPoints[0].x,inputPoints[0].y, 5, 0, 2*Math.PI, true);
+        ctx.arc(guidePt.x,guidePt.y, 5, 0, 2*Math.PI, true);
         ctx.fill();
         return;
     }
+
+    //desenha a curva
+    ctx.fillStyle = "#FFFFFF";
+	for(let i = 0; i < curvePoints.length; ++i)
+	{
+		ctx.beginPath();
+		ctx.arc(curvePoints[i].x,curvePoints[i].y, 1.5, 0, 2*Math.PI, true);
+		ctx.fill();
+    }
+
+    // desenha os pontos de interpolacao
+    ctx.fillStyle = "#FF0000";
 	for(let i = 0; i < bezierPoints.length; ++i)
 	{
 		ctx.beginPath();
@@ -310,6 +317,7 @@ function redraw()
 		ctx.fill();
     }
     
+    //desenha os pontos de controle
     ctx.fillStyle = "#FF00FF";
     ctx.lineWidth = 1;
 	for(let i = 0; i < bezierPoints.length; ++i)
@@ -319,7 +327,6 @@ function redraw()
         ctx.arc(bezierPoints[i][2].x,bezierPoints[i][2].y, 5, 0, 2*Math.PI, true);
 		ctx.fill();
     }
-
     ctx.strokeStyle = "#FF00FF";
     ctx.lineWidth = 1.5;
 	for(let i = 0; i < bezierPoints.length; ++i)
@@ -332,12 +339,20 @@ function redraw()
 		ctx.stroke(); 
     }
     
-    ctx.fillStyle = "#FFFFFF";
-    ctx.lineWidth = 2;
-	for(let i = 0; i < curvePoints.length; ++i)
-	{
-		ctx.beginPath();
-		ctx.arc(curvePoints[i].x,curvePoints[i].y, 2, 0, 2*Math.PI, true);
-		ctx.fill();
-	}
+    if (!isEditing) {
+        //desenha linha guia
+        ctx.strokeStyle = "#FFFF00";
+        ctx.lineWidth = 2;
+        let lastIndex = bezierPoints.length - 1;
+        ctx.beginPath();
+        ctx.moveTo(bezierPoints[lastIndex][3].x,bezierPoints[lastIndex][3].y);
+        ctx.lineTo(guidePt.x,guidePt.y);
+        ctx.stroke();
+
+        //desenha o ponto guia
+        ctx.fillStyle = "#FFFF00";
+        ctx.beginPath();
+        ctx.arc(guidePt.x,guidePt.y, 5, 0, 2*Math.PI, true);
+        ctx.fill();
+    }
 }
