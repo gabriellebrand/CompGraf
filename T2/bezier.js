@@ -64,6 +64,7 @@ function onMouseDown(evt) {
         editingPtIndex = searchControlPoint(point);
     }
 }
+
 function onMouseMove(evt)
 {
 	guidePt = getMousePos(evt);

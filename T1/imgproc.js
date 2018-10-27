@@ -145,7 +145,7 @@ function sobelFilter() {
                         dfdyOut += (neighbor * dfdy[(j+1)*3+(i+1)]);    
                     }
                 }
-                let result =  255 - (Math.abs(dfdxOut) + Math.abs(dfdyOut));
+                let result =  255 - (Math.abs(dfdxOut/4) + Math.abs(dfdyOut/4));
                 outputImg.data[index(x,y)] = result;
                 outputImg.data[index(x,y)+1] = result;
                 outputImg.data[index(x,y)+2] = result;
