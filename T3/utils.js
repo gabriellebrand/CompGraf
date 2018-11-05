@@ -14,6 +14,6 @@ function sub(va, vb) {
     return v1;
 }
 
-function Color(r, g, b, a = 1) {
+function Color(r = 0, g = 0, b = 0, a = 1) {
     return { r: r, g: g, b: b, a: a };
 }

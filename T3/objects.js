@@ -15,7 +15,6 @@ class Sphere {
 
         //a = d.d
         let a = vec3.dot(ray.d, ray.d);
-
         //b = 2d.(o-c)
         let b = 2*vec3.dot(ray.d, o_c);
         //c = (o-c).(o-c) - rˆ2
