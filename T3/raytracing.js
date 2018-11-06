@@ -10,8 +10,8 @@ function paintPixel(img, x,y, color) {
 }
 
 var alias = 4;
-var applyAntialias = true;
-var showAxis = true;
+var applyAntialias = false;
+var showAxis = false;
 
 function getPixelAntialias(scene, x, y) {
     let pixel = Color();
@@ -82,13 +82,17 @@ var axisX = new BoundingBox(vec3.fromValues(0,0,0), vec3.fromValues(100, 0.5, 0.
 var axisY = new BoundingBox(vec3.fromValues(0,0,0), vec3.fromValues(0.5, 100, 0.5), Color(0, 1, 0));
 var axisZ = new BoundingBox(vec3.fromValues(0,0,0), vec3.fromValues(0.5, 0.5, 100), Color(0, 0, 1));
 
-var light = Light(vec3.fromValues(40, 120, 0), Color(0.8, 0.8, 0.8));
-var light2 = Light(vec3.fromValues(100, 0, 0), Color(0.8, 0.8, 0.8));
+var light = LightSpot(vec3.fromValues(40, 120, 40), Color(0.8, 0.8, 0.8));
+var light2 = LightSpot(vec3.fromValues(80, 120, 0), Color(0.1, 0.1, 0.1));
 var ambientLight = Color(0.2, 0.2, 0.2);
+
+var lightSphere = LightSphere12(vec3.fromValues(40,120,0), Color(0.8, 0.8, 0.8), 10);
 
 var scene = new Scene(camera, ambientLight);
 scene.setBackgroundColor(Color(0.4, 0.4, 0.4));
-scene.addLightSpot(light);
+scene.addLightSphere(lightSphere);
+//scene.addLightSphere(lightSphere2);
+//scene.addLightSpot(light);
 //scene.addLightSpot(light2);
 
 scene.addObject(box1);

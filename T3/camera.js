@@ -37,11 +37,13 @@ class Camera {
         //-fze
         let fze = vec3.create();
         vec3.scale(fze, this.ze, this.f);
-        vec3.negate(fze, fze);        
+        vec3.negate(fze, fze);   
+             
         //a(y/h - 1/2)*ye
         let factorYe = this.a*(y/this.h - 0.5);
         let fye = vec3.create();
         vec3.scale(fye, this.ye, factorYe);
+
         //b(x/w - 1/2)*xe
         let factorXe = this.b*(x/this.w - 0.5);
         let fxe = vec3.create();
@@ -50,8 +52,7 @@ class Camera {
         //d = -fze + a(y/h - 1/2)*ye + b(x/w - 1/2)*xe
         vec3.add(d, fze, fye);
         vec3.add(d, d, fxe);
-
-        //vec3.normalize(d, d);
+        
         return d;
     }
 

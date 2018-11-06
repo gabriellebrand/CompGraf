@@ -15,6 +15,12 @@ class Scene {
         this.lights.push(light);
     }
 
+    addLightSphere(lightSphere) {
+        for (let i = 0; i < lightSphere.points.length; ++i) {
+            this.addLightSpot(LightSpot(lightSphere.points[i], lightSphere.color));
+        }
+    }
+
     addObject(object) {
         this.objects.push(object);
     }
@@ -41,10 +47,22 @@ class Scene {
     _applyDiffuseEffect(light, normal, pos, color) {
         let L = sub(light.pos, pos);
         vec3.normalize(L, L);
+
+        //shadowFactor -> se for = 1 não adiciona sombra
+        let shadowFactor = 1.0
+        for (let i = 0; i < this.objects.length; i++) {
+            let shadowRay = {o: pos, d: L};
+            let result = this.objects[i].hit(shadowRay);
+
+            if (result.hit == true && result.t > 0) {
+                shadowFactor = 0.25
+            }
+        }
+
         let Ln = vec3.dot(L, normal);
-        return Color(light.color.r*color.r*Ln, 
-                     light.color.g*color.g*Ln, 
-                     light.color.b*color.b*Ln);
+        return Color(light.color.r*color.r*Ln*shadowFactor, 
+                     light.color.g*color.g*Ln*shadowFactor, 
+                     light.color.b*color.b*Ln*shadowFactor);
     }
     
     _applyAmbientLight(light, color) {
