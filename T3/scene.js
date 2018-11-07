@@ -25,7 +25,7 @@ class Scene {
         this.objects.push(object);
     }
 
-    _checkShadowExistence(light, L, pos, objIndex) {
+    _checkShadowExistence(light, L, pos) {
         let shadowFactor = 1;
 
         for (let i = 0; i < this.objects.length; i++) {
@@ -47,17 +47,17 @@ class Scene {
         return shadowFactor;
     }
     
-    _applySpecularEffect(light, normal, pos, color, n, objIndex) {
+    _applySpecularEffect(light, normal, pos, color, n) {
         let L = sub(light.pos, pos);
         vec3.normalize(L, L);
         let Ln = vec3.dot(L, normal);
         let Lprojn = vec3.create();
         vec3.scale(Lprojn, normal, 2*Ln);
         let r = sub(Lprojn, L);
-        let v = sub(camera.eye, pos);
+        let v = sub(this.camera.eye, pos);
         let cosA = vec3.dot(v, r) / (vec3.length(v) * vec3.length(r));
 
-        let shadow = this._checkShadowExistence(light, L, pos, objIndex);
+        let shadow = this._checkShadowExistence(light, L, pos);
 
         //nao tem reflexao especular para as condicoes abaixo
         if (n < 0 || cosA <= 0 || shadow < 1.0) return Color(0, 0, 0);
@@ -68,12 +68,12 @@ class Scene {
                      light.color.b*color.b*cosA_n);
     }
 
-    _applyDiffuseEffect(light, normal, pos, color, objIndex) {
+    _applyDiffuseEffect(light, normal, pos, color) {
         let L = sub(light.pos, pos);
         vec3.normalize(L, L);
 
         //shadowFactor -> se for = 1.0 não "adiciona" sombra
-        let shadowFactor = this._checkShadowExistence(light, L, pos, objIndex);
+        let shadowFactor = this._checkShadowExistence(light, L, pos);
 
         let Ln = vec3.dot(L, normal);
         return Color(light.color.r*color.r*Ln*shadowFactor, 
@@ -94,7 +94,7 @@ class Scene {
 
         //calcula a contribuição de cada umas das luzes para a cor de saída
         let contributions = [];
-        contributions.push(this._applyAmbientLight(ambientLight, c));
+        contributions.push(this._applyAmbientLight(this.ambientLight, c));
         for (let i = 0; i < this.lights.length; i++) {
             contributions.push(this._applyDiffuseEffect(this.lights[i], n, p, c, objIdx));
             contributions.push(this._applySpecularEffect(this.lights[i], n, p, 
@@ -128,7 +128,7 @@ class Scene {
             }
         }
         if (closest.t < Number.POSITIVE_INFINITY)
-            return scene._shade(ray, closest.obj, closest.t, closestIndex);
+            return this._shade(ray, closest.obj, closest.t, closestIndex);
         else
             return null;
     }
