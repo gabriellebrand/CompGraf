@@ -24,8 +24,30 @@ class Scene {
     addObject(object) {
         this.objects.push(object);
     }
+
+    _checkShadowExistence(light, L, pos, objIndex) {
+        let shadowFactor = 1;
+
+        for (let i = 0; i < this.objects.length; i++) {
+            let shadowRay = {o: pos, d: L};
+            let result = this.objects[i].hit(shadowRay);
+
+            if (result.hit == true) {
+                let distLight = vec3.distance(light.pos, pos);
+                let hitPoint = Camera.p(shadowRay, result.t);
+                let distHitPoint = vec3.distance(hitPoint, pos);
+
+                if (distHitPoint < distLight) {
+                    shadowFactor = 0.25;
+                    break;
+                }
+            }
+        }
+
+        return shadowFactor;
+    }
     
-    _applySpecularEffect(light, normal, pos, color, n) {
+    _applySpecularEffect(light, normal, pos, color, n, objIndex) {
         let L = sub(light.pos, pos);
         vec3.normalize(L, L);
         let Ln = vec3.dot(L, normal);
@@ -35,8 +57,10 @@ class Scene {
         let v = sub(camera.eye, pos);
         let cosA = vec3.dot(v, r) / (vec3.length(v) * vec3.length(r));
 
-        //para evitar contribuições negativas ou indevidas (se o n for par)
-        if (cosA <= 0) return Color(0, 0, 0);
+        let shadow = this._checkShadowExistence(light, L, pos, objIndex);
+
+        //nao tem reflexao especular para as condicoes abaixo
+        if (n < 0 || cosA <= 0 || shadow < 1.0) return Color(0, 0, 0);
 
         let cosA_n = Math.pow(cosA, n);
         return Color(light.color.r*color.r*cosA_n, 
@@ -44,20 +68,12 @@ class Scene {
                      light.color.b*color.b*cosA_n);
     }
 
-    _applyDiffuseEffect(light, normal, pos, color) {
+    _applyDiffuseEffect(light, normal, pos, color, objIndex) {
         let L = sub(light.pos, pos);
         vec3.normalize(L, L);
 
-        //shadowFactor -> se for = 1 não adiciona sombra
-        let shadowFactor = 1.0
-        for (let i = 0; i < this.objects.length; i++) {
-            let shadowRay = {o: pos, d: L};
-            let result = this.objects[i].hit(shadowRay);
-
-            if (result.hit == true && result.t > 0) {
-                shadowFactor = 0.25
-            }
-        }
+        //shadowFactor -> se for = 1.0 não "adiciona" sombra
+        let shadowFactor = this._checkShadowExistence(light, L, pos, objIndex);
 
         let Ln = vec3.dot(L, normal);
         return Color(light.color.r*color.r*Ln*shadowFactor, 
@@ -71,7 +87,7 @@ class Scene {
                      light.b*color.b);
     }
 
-    _shade(ray, object, t) {
+    _shade(ray, object, t, objIdx) {
         let p = Camera.p(ray, t);
         let c = object.getPixelColor(p);
         let n = object.normal(p);
@@ -80,9 +96,9 @@ class Scene {
         let contributions = [];
         contributions.push(this._applyAmbientLight(ambientLight, c));
         for (let i = 0; i < this.lights.length; i++) {
-            contributions.push(this._applyDiffuseEffect(this.lights[i], n, p, c));
+            contributions.push(this._applyDiffuseEffect(this.lights[i], n, p, c, objIdx));
             contributions.push(this._applySpecularEffect(this.lights[i], n, p, 
-                               Color(1,1,1), object.nSpec));
+                               object.specColor, object.nSpec, objIdx));
         }
 
         //soma a contribuições
@@ -99,20 +115,20 @@ class Scene {
         let ray = this.camera.ray(x, y);
         //closest = objeto mais próximo da camera (menor t)
         let closest = {obj: null, t: Number.POSITIVE_INFINITY};
-
+        let closestIndex = -1;
         for (let i = 0; i < this.objects.length; ++i) {
             let result = this.objects[i].hit(ray);
-            //console.log(i);
             if (result.hit == true) {
                 if (result.t < closest.t){
                     closest.obj = this.objects[i];
                     closest.t = result.t;
+                    closestIndex = i;
                 }
                     
             }
         }
         if (closest.t < Number.POSITIVE_INFINITY)
-            return scene._shade(ray, closest.obj, closest.t);
+            return scene._shade(ray, closest.obj, closest.t, closestIndex);
         else
             return null;
     }

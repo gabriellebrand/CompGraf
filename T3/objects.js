@@ -1,84 +1,10 @@
-//cria luz pontual
-function LightSpot(pos, color) {
-    return { pos: pos, 
-             color: color,
-             //spherePoints: createLightSphere(pos)
-           };
-}
-
-//cria luz esférica (= 12 luzes pontuais equidistantes em uma superficie esferica)
-function LightSphere12(pos, color, ratio) {
-    var distributedColor = Color(color.r/12, color.g/12, color.b/12);
-    return {points: _getLightSpherePoints12(pos, ratio),
-            color: distributedColor};
-}
-
-//gera 12 vertices de um icosaedro
-//center: centro do icosaedro
-//size: noção de tamanho da esfera na verdade é o tamanho da aresta do poliedro
-//https://www.gamedev.net/forums/topic/166260-distributing-equidistant-points-on-a-sphere/
-function _getLightSpherePoints12(center, size) {
-    let a = size*Math.sqrt(2 / (5 + Math.sqrt(5)));
-    let b = size*Math.sqrt(2 / (5 - Math.sqrt(5)));
-
-    var points = [vec3.fromValues(-a, 0, b), vec3.fromValues(a, 0, b), 
-                  vec3.fromValues(-a, 0, -b), vec3.fromValues(a, 0, -b),
-                  vec3.fromValues(0, b, a), vec3.fromValues(0, b, -a), 
-                  vec3.fromValues(0, -b, a), vec3.fromValues(0, -b, -a),
-                  vec3.fromValues(b, a, 0), vec3.fromValues(-b, a, 0), 
-                  vec3.fromValues(b, -a, 0), vec3.fromValues(-b, -a, 0)];
-
-    console.log(points)
-
-    //translada os pontos criados para a posicao da luz pontual
-    for (let i = 0; i < points.length; i++) {
-        vec3.add(points[i], points[i], center);
-    }
-
-    return points;
-}
-
-
-//cria luz esférica (= 20 luzes pontuais equidistantes em uma superficie esferica)
-function LightSphere20(pos, color, ratio) {
-    var distributedColor = Color(color.r/20, color.g/20, color.b/20);
-    return {points: _getLightSpherePoints20(pos, ratio),
-            color: distributedColor};
-}
-
-//(0,±ϕ−1,±ϕ),(±ϕ−1,±ϕ,0),(±ϕ,0,±ϕ−1),(±1,±1,±1)
-function _getLightSpherePoints20(center, size) {
-    let a = size*Math.sqrt(2 / (5 + Math.sqrt(5)));
-    let b = size*Math.sqrt(2 / (5 - Math.sqrt(5)));
-
-    var points = [vec3.fromValues(-a, 0, b), vec3.fromValues(a, 0, b), 
-                  vec3.fromValues(-a, 0, -b), vec3.fromValues(a, 0, -b),
-                  vec3.fromValues(0, b, a), vec3.fromValues(0, b, -a), 
-                  vec3.fromValues(0, -b, a), vec3.fromValues(0, -b, -a),
-                  vec3.fromValues(b, a, 0), vec3.fromValues(-b, a, 0), 
-                  vec3.fromValues(b, -a, 0),  vec3.fromValues(-b, -a, 0),
-                  vec3.fromValues(-1, 1, 1), vec3.fromValues(-1, -1, 1),
-                  vec3.fromValues(-1, -1, -1), vec3.fromValues(1, -1, -1),
-                  vec3.fromValues(1, 1, -1), vec3.fromValues(1, -1, 1),
-                  vec3.fromValues(-1, 1, -1), vec3.fromValues(1, 1, 1)
-                ];
-
-    console.log(points)
-
-    //translada os pontos criados para a posicao da luz pontual
-    for (let i = 0; i < points.length; i++) {
-        vec3.add(points[i], points[i], center);
-    }
-
-    return points;
-}
-
 class Sphere {
     constructor (c, r, color) {
         this.c = c;
         this.r = r;
         this.color = color
         this.nSpec = 50;
+        this.specColor = Color(1,1,1);
     }
 
     hit (ray) {
@@ -92,13 +18,17 @@ class Sphere {
         let c = vec3.dot(o_c, o_c) - this.r*this.r;
 
         let delta = b*b - 4*a*c;
-        if(delta < 0)
-            return {hit: false, t: undefined};
+        if (delta >= 0) {
+            let t1 = (-b - Math.sqrt(delta)) / (2 * a);
+            let t2 = (-b + Math.sqrt(delta)) / (2 * a);
+            let tmin = t1 > t2 ? t2 : t1;
 
-        let t1 = (-b - Math.sqrt(delta))/(2*a);
-        let t2 = (-b + Math.sqrt(delta))/(2*a);
+            //ERRO DE IMPRECISÃO NUMÉRICA!!!!
+            if (tmin > 0.0001)
+                return {hit: true, t: tmin};
+        }
 
-        return {hit: true, t: t1 > t2 ? t2 : t1};
+        return {hit: false, t: undefined};
     }
 
     normal(p) {
@@ -112,12 +42,14 @@ class Sphere {
     }
 }
 
+
 class BoundingBox {
     constructor (pmin, pmax, color) {
         this.pmin = pmin;
         this.pmax = pmax;
         this.color = color;
-        this.nSpec = 40;
+        this.nSpec = -1;
+        this.specColor = Color(1,1,1);
     }
 
     hit(ray) {
@@ -142,7 +74,7 @@ class BoundingBox {
             //valor de t no qual o raio intersecta o plano
             let t = (face - ray.o[faceAxis]) / ray.d[faceAxis];
 
-            if (t >= 0) {
+            if (t > 0.0001) {
                 //coordenada p do raio em tmin
                 let p = Camera.p(ray, t);
 
@@ -191,7 +123,7 @@ class BoundingBox {
                 return testFaceZMax;
         }
 
-        return {hit:false, t: NaN};
+        return {hit:false, t: undefined};
     }
 
     normal(p) {
@@ -217,4 +149,43 @@ class BoundingBox {
         return this.color;
     }
         
+}
+
+
+//cria luz pontual
+function LightSpot(pos, color) {
+    return { pos: pos, 
+             color: color,
+             //spherePoints: createLightSphere(pos)
+           };
+}
+
+//cria luz esférica (= 12 luzes pontuais equidistantes em uma superficie esferica)
+function LightSphere12(pos, color, ratio) {
+    var distributedColor = Color(color.r/12, color.g/12, color.b/12);
+    return {points: _getLightSpherePoints12(pos, ratio),
+            color: distributedColor};
+}
+
+//gera 12 vertices de um icosaedro
+//center: centro do icosaedro
+//size: noção de tamanho da esfera na verdade é o tamanho da aresta do poliedro
+//https://www.gamedev.net/forums/topic/166260-distributing-equidistant-points-on-a-sphere/
+function _getLightSpherePoints12(center, size) {
+    let a = size*Math.sqrt(2 / (5 + Math.sqrt(5)));
+    let b = size*Math.sqrt(2 / (5 - Math.sqrt(5)));
+
+    var points = [vec3.fromValues(-a, 0, b), vec3.fromValues(a, 0, b), 
+                  vec3.fromValues(-a, 0, -b), vec3.fromValues(a, 0, -b),
+                  vec3.fromValues(0, b, a), vec3.fromValues(0, b, -a), 
+                  vec3.fromValues(0, -b, a), vec3.fromValues(0, -b, -a),
+                  vec3.fromValues(b, a, 0), vec3.fromValues(-b, a, 0), 
+                  vec3.fromValues(b, -a, 0), vec3.fromValues(-b, -a, 0)];
+
+    //translada os pontos criados para a posicao da luz pontual
+    for (let i = 0; i < points.length; i++) {
+        vec3.add(points[i], points[i], center);
+    }
+
+    return points;
 }
