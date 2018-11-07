@@ -25,8 +25,9 @@ class Scene {
         this.objects.push(object);
     }
 
-    _checkShadowExistence(light, L, pos) {
-        let shadowFactor = 1;
+    _checkShadowExistence(light, pos) {
+        let L = sub(light.pos, pos);
+        vec3.normalize(L, L);
 
         for (let i = 0; i < this.objects.length; i++) {
             let shadowRay = {o: pos, d: L};
@@ -37,14 +38,12 @@ class Scene {
                 let hitPoint = Camera.p(shadowRay, result.t);
                 let distHitPoint = vec3.distance(hitPoint, pos);
 
-                if (distHitPoint < distLight) {
-                    shadowFactor = 0.25;
-                    break;
-                }
+                if (distHitPoint < distLight)
+                    return true;
             }
         }
 
-        return shadowFactor;
+        return false;
     }
     
     _applySpecularEffect(light, normal, pos, color, n) {
@@ -57,10 +56,8 @@ class Scene {
         let v = sub(this.camera.eye, pos);
         let cosA = vec3.dot(v, r) / (vec3.length(v) * vec3.length(r));
 
-        let shadow = this._checkShadowExistence(light, L, pos);
-
         //nao tem reflexao especular para as condicoes abaixo
-        if (n < 0 || cosA <= 0 || shadow < 1.0) return Color(0, 0, 0);
+        if (n < 0 || cosA <= 0) return Color(0, 0, 0);
 
         let cosA_n = Math.pow(cosA, n);
         return Color(light.color.r*color.r*cosA_n, 
@@ -72,13 +69,10 @@ class Scene {
         let L = sub(light.pos, pos);
         vec3.normalize(L, L);
 
-        //shadowFactor -> se for = 1.0 não "adiciona" sombra
-        let shadowFactor = this._checkShadowExistence(light, L, pos);
-
         let Ln = vec3.dot(L, normal);
-        return Color(light.color.r*color.r*Ln*shadowFactor, 
-                     light.color.g*color.g*Ln*shadowFactor, 
-                     light.color.b*color.b*Ln*shadowFactor);
+        return Color(light.color.r*color.r*Ln, 
+                     light.color.g*color.g*Ln, 
+                     light.color.b*color.b*Ln);
     }
     
     _applyAmbientLight(light, color) {
@@ -96,9 +90,12 @@ class Scene {
         let contributions = [];
         contributions.push(this._applyAmbientLight(this.ambientLight, c));
         for (let i = 0; i < this.lights.length; i++) {
-            contributions.push(this._applyDiffuseEffect(this.lights[i], n, p, c, objIdx));
+            let shadow = this._checkShadowExistence(this.lights[i], p);
+            if (shadow == true) continue;
+
+            contributions.push(this._applyDiffuseEffect(this.lights[i], n, p, c));
             contributions.push(this._applySpecularEffect(this.lights[i], n, p, 
-                               object.specColor, object.nSpec, objIdx));
+                               object.specColor, object.nSpec));
         }
 
         //soma a contribuições
