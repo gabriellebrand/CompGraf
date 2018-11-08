@@ -1,10 +1,12 @@
 class Sphere {
-    constructor (c, r, color) {
+    constructor (c, r, color, reflect) {
         this.c = c;
         this.r = r;
         this.color = color
         this.nSpec = 50;
         this.specColor = Color(1,1,1);
+        //fator de reflexao
+        this.reflect = reflect;
     }
 
     hit (ray) {
@@ -44,12 +46,14 @@ class Sphere {
 
 
 class BoundingBox {
-    constructor (pmin, pmax, color) {
+    constructor (pmin, pmax, color, reflect) {
         this.pmin = pmin;
         this.pmax = pmax;
         this.color = color;
         this.nSpec = -1;
         this.specColor = Color(1,1,1);
+        //fator de reflexao
+        this.reflect = reflect;
     }
 
     hit(ray) {

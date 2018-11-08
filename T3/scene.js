@@ -45,6 +45,17 @@ class Scene {
 
         return false;
     }
+
+    _getReflectedRay(pos, normal) {
+        let ve = sub(this.camera.eye, pos);
+        vec3.normalize(ve, ve);
+        let ven = vec3.dot(ve, normal);
+        let veprojn = vec3.create();
+        vec3.scale(veprojn, normal, 2*ven);
+        var r = sub(veprojn, ve);
+        vec3.normalize(r,r);
+        return {o: pos, d: r};
+    }
     
     _applySpecularEffect(light, normal, pos, color, n) {
         let L = sub(light.pos, pos);
@@ -81,7 +92,7 @@ class Scene {
                      light.b*color.b);
     }
 
-    _shade(ray, object, t, objIdx) {
+    _shade(ray, object, t, depth) {
         let p = Camera.p(ray, t);
         let c = object.getPixelColor(p);
         let n = object.normal(p);
@@ -105,27 +116,37 @@ class Scene {
             colorOut.g += contributions[i].g;
             colorOut.b += contributions[i].b;
         }
+
+        if (depth >= 4) return colorOut;
+
+        if (object.reflect > 0) {
+            let rRay = this._getReflectedRay(p, n);
+            let rColor = this.trace(rRay, depth + 1);
+
+            if (rColor == null) rColor = this.backgroundColor;
+
+            colorOut.r += object.reflect*rColor.r;
+            colorOut.g += object.reflect*rColor.g;
+            colorOut.b += object.reflect*rColor.b;
+        }
+
         return colorOut;
     }
 
-    trace(x, y) {
-        let ray = this.camera.ray(x, y);
+    trace(ray, depth) {
         //closest = objeto mais próximo da camera (menor t)
         let closest = {obj: null, t: Number.POSITIVE_INFINITY};
-        let closestIndex = -1;
         for (let i = 0; i < this.objects.length; ++i) {
             let result = this.objects[i].hit(ray);
             if (result.hit == true) {
                 if (result.t < closest.t){
                     closest.obj = this.objects[i];
                     closest.t = result.t;
-                    closestIndex = i;
-                }
-                    
+                }    
             }
         }
         if (closest.t < Number.POSITIVE_INFINITY)
-            return this._shade(ray, closest.obj, closest.t, closestIndex);
+            return this._shade(ray, closest.obj, closest.t, depth);
         else
             return null;
     }

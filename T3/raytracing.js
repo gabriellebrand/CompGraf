@@ -23,7 +23,8 @@ function getPixelAntialias(scene, x, y) {
             let subX = x + (i + 0.5 + dx)/alias;
             let subY = y + (j + 0.5 + dy)/alias;
 
-            let subPixel = scene.trace(subX, subY);
+            let ray = scene.camera.ray(subX, subY);
+            let subPixel = scene.trace(ray, 1);
             if (subPixel == null) {
                 subPixel = scene.backgroundColor;
             }
@@ -42,7 +43,8 @@ function getPixelAntialias(scene, x, y) {
 }
 
 function getPixel(scene, x, y) {
-    let pixel = scene.trace(x, y);
+    let ray = scene.camera.ray(x, y);
+    let pixel = scene.trace(ray, 1);
     if (pixel === null)
         pixel = scene.backgroundColor;
 
@@ -116,11 +118,11 @@ function render1Pressed() {
     var ambientLight = Color(0.2, 0.2, 0.2);
     var lightSphere = LightSphere12(vec3.fromValues(lx, ly, lz), Color(lr, lg, lb), 5);
 
-    var sphere = new Sphere(vec3.fromValues(sx, sy, sz), r, Color(sr, sg, sb));
+    var sphere = new Sphere(vec3.fromValues(sx, sy, sz), r, Color(sr, sg, sb), -1);
     var box1 = new BoundingBox(vec3.fromValues(pmin1x, pmin1y, pmin1z), vec3.fromValues(pmax1x, pmax1y, pmax1z),
-        Color(br, bg, bb));
+        Color(br, bg, bb), -1);
     var box2 = new BoundingBox(vec3.fromValues(-80, -50, -60), vec3.fromValues(50, 50, -50),
-        Color(br, bg, bb));
+        Color(br, bg, bb), -1);
 
     var scene = new Scene(camera, ambientLight);
     scene.setBackgroundColor(backgroundColor);
@@ -177,19 +179,19 @@ function render2Pressed() {
     var lightSphere2 = LightSphere12(vec3.fromValues(lx2, ly2, lz2), Color(lr2, lg2, lb2), 8);
 
     var floor = new BoundingBox(vec3.fromValues(0, 0, 0), vec3.fromValues(100, 5, 100),
-        Color(0.4, 0.4, 0.4));
+        Color(0.1, 0.1, 0.1), 0.6);
     var ceil = new BoundingBox(vec3.fromValues(0, 90, 0), vec3.fromValues(100, 105, 100),
-        Color(0.4, 0.4, 0.4));
+        Color(0.1, 0.1, 0.1), 0.6);
     var wall1 = new BoundingBox(vec3.fromValues(-10, 0, 0), vec3.fromValues(0, 100, 100),
-        Color(0.4, 0.4, 0.4));
+        Color(0.3, 0.3, 0.3), -1);
     var wall2 = new BoundingBox(vec3.fromValues(0, 0, -10), vec3.fromValues(100, 100, 0),
-        Color(0.4, 0.4, 0.4));
+        Color(0.3, 0.3, 0.3), -1);
     var wall3 = new BoundingBox(vec3.fromValues(90, 0, 0), vec3.fromValues(100, 100, 100),
-        Color(0.4, 0.4, 0.4));
+        Color(0.3, 0.3, 0.3), -1);
 
-    var sphere = new Sphere(vec3.fromValues(40, 13, 40), 8, Color(0.42, 0.04, 1));
-    var sphere2 = new Sphere(vec3.fromValues(56, 13, 40), 8, Color(1, 0.04, 0.13));
-    var sphere3 = new Sphere(vec3.fromValues(48, 27, 40), 8, Color(0, 0.37, 0.33));
+    var sphere = new Sphere(vec3.fromValues(40, 13, 40), 8, Color(0.42, 0.04, 1), 0.8);
+    var sphere2 = new Sphere(vec3.fromValues(56, 13, 40), 8, Color(1, 0.04, 0.13), 0.8);
+    var sphere3 = new Sphere(vec3.fromValues(48, 27, 40), 8, Color(0, 0.37, 0.33), 0.8);
 
     var scene = new Scene(camera, ambientLight);
     scene.setBackgroundColor(backgroundColor);
