@@ -26,8 +26,8 @@ function onLoad(){
 
     //Desenhar a cena
     //drawCubes();
-    drawBunny();
-    //drawSphere();
+    //drawBunny();
+    drawSphere();
 }
 
 function initGL(){
@@ -159,9 +159,7 @@ function drawSphere() {
     var nm = mat4.create();
 
     mat4.identity(model);
-    //mat4.translate(model,model,[0.0,0,0.0]);
 
-    mat4.identity(modelView);
     mat4.multiply(modelView,view,model);
     mat4.multiply(mvp,proj,modelView);
 
@@ -274,4 +272,10 @@ function drawCubes(){
 
     //Desabilitar buffers habilitados
       gl.bindVertexArray(null);
+}
+
+function drawScene() {
+    //Definir tamanho e limpar a janela
+    gl.viewport(0,0,gl.viewportWidth,gl.viewportHeight);
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 }

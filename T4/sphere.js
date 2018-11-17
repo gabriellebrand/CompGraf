@@ -58,9 +58,9 @@ Sphere.createSphereData = function() {
     var triangleSubdivision = function (v1, v2, v3, depth) {
         if (depth == 0) {
             //procura o indice do vertice caso ele ja tenha sido adicionado
-            let i1 = findVertex(vertices, v1);
-            let i2 = findVertex(vertices, v2);
-            let i3 = findVertex(vertices, v3);
+            let i1 = Utils.findVertex(vertices, v1);
+            let i2 = Utils.findVertex(vertices, v2);
+            let i3 = Utils.findVertex(vertices, v3);
 
             if (i1 < 0) {
                 vertices = vertices.concat(v1);
@@ -116,6 +116,10 @@ Sphere.createSphereData = function() {
 
     console.log(vertices.length);
     console.log(elements.length);
+
+    var model = mat4.create();
+    mat4.identity(model);
+
     return {
         vertices: vertices,
         normals: normals,
@@ -124,53 +128,12 @@ Sphere.createSphereData = function() {
         material: {
             specular: vec3.fromValues(0.5, 0.5, 0.5),
             shi: 24.0
-        }
+        },
+        model: model
     }
 }
 
 Sphere.createSphereVAO = function(gl, program, sphere) {
-    var spherevao = gl.createVertexArray();
-    gl.bindVertexArray(spherevao);
-
-    //Criar VBO dos vertices, linkar e copiar os dados
-    var vertexVBO = gl.createBuffer();
-	//Define buffer como corrente.
-    gl.bindBuffer(gl.ARRAY_BUFFER, vertexVBO);
-	//Aloca buffer e copia dados.
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(sphere.vertices), gl.STATIC_DRAW);
-	//Habilita atributo desejado do vertice.
-    gl.enableVertexAttribArray(program.vertexPosAttr);
-	//Diz que os atributos estao no buffer corrente.
-    gl.vertexAttribPointer(program.vertexPosAttr, 3, gl.FLOAT, false, 0, 0);
-
-    //Criar VBO para cores, linkar e copiar os dados
-    var vboColor = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, vboColor);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(sphere.colors), gl.STATIC_DRAW);
-    gl.enableVertexAttribArray(program.vertexColorAttr);
-    gl.vertexAttribPointer(program.vertexColorAttr, 3, gl.FLOAT, false, 0, 0);
-
-    var vboNormals = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, vboNormals);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(sphere.normals), gl.STATIC_DRAW);
-    gl.enableVertexAttribArray(program.vertexNormalAttr);
-    gl.vertexAttribPointer(program.vertexNormalAttr, 3, gl.FLOAT, false, 0, 0);
-
-    //Criar EBO, linkar e copiar os dados
-    var EBO = gl.createBuffer();
-	//Define o buffer como corrente e o define como buffer de elementos.
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, EBO);
-	//Aloca buffer e copia dados.
-    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(sphere.elements), gl.STATIC_DRAW);
-
+    var spherevao = Model.createVAO(gl, program, sphere);
     return spherevao;
-}
-
-function findVertex(vertices, v) {
-    for (let i = 0; i < vertices.length; i += 3) {
-        if (vertices[i] == v[0] && vertices[i+1] == v[1] && vertices[i+2] == v[2])
-            return Math.floor(i/3);
-    }
-
-    return -1;
 }

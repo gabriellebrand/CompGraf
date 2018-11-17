@@ -110,39 +110,6 @@ Cube.createCubeData = function() {
 }
 
 Cube.createCubeVAO = function(gl, program, cube) {
-    var cubevao = gl.createVertexArray();
-    gl.bindVertexArray(cubevao);
-
-    //Criar VBO dos vertices, linkar e copiar os dados
-    var vertexVBO = gl.createBuffer();
-	//Define buffer como corrente.
-    gl.bindBuffer(gl.ARRAY_BUFFER, vertexVBO);
-	//Aloca buffer e copia dados.
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(cube.vertices), gl.STATIC_DRAW);
-	//Habilita atributo desejado do vertice.
-    gl.enableVertexAttribArray(program.vertexPosAttr);
-	//Diz que os atributos estao no buffer corrente.
-    gl.vertexAttribPointer(program.vertexPosAttr, 3, gl.FLOAT, false, 0, 0);
-
-    //Criar VBO para cores, linkar e copiar os dados
-    var vboColor = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, vboColor);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(cube.colors), gl.STATIC_DRAW);
-    gl.enableVertexAttribArray(program.vertexColorAttr);
-    gl.vertexAttribPointer(program.vertexColorAttr, 3, gl.FLOAT, false, 0, 0);
-
-    var vboNormals = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, vboNormals);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(cube.normals), gl.STATIC_DRAW);
-    gl.enableVertexAttribArray(program.vertexNormalAttr);
-    gl.vertexAttribPointer(program.vertexNormalAttr, 3, gl.FLOAT, false, 0, 0);
-
-    //Criar EBO, linkar e copiar os dados
-    var EBO = gl.createBuffer();
-	//Define o buffer como corrente e o define como buffer de elementos.
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, EBO);
-	//Aloca buffer e copia dados.
-    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(cube.elements), gl.STATIC_DRAW);
-
+    var cubevao = Model.createVAO(gl, program, cube);
     return cubevao;
 }

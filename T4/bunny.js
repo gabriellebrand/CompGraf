@@ -27,39 +27,6 @@ Bunny.createBunny = function() {
 }
 
 Bunny.createBunnyVAO = function(gl, program, bunny) {
-    var bunnyvao = gl.createVertexArray();
-    gl.bindVertexArray(bunnyvao);
-
-    //Criar VBO dos vertices, linkar e copiar os dados
-    var vertexVBO = gl.createBuffer();
-	//Define buffer como corrente.
-    gl.bindBuffer(gl.ARRAY_BUFFER, vertexVBO);
-	//Aloca buffer e copia dados.
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(bunny.vertices), gl.STATIC_DRAW);
-	//Habilita atributo desejado do vertice.
-    gl.enableVertexAttribArray(program.vertexPosAttr);
-	//Diz que os atributos estao no buffer corrente.
-    gl.vertexAttribPointer(program.vertexPosAttr, 3, gl.FLOAT, false, 0, 0);
-
-    //Criar VBO para cores, linkar e copiar os dados
-    var vboColor = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, vboColor);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(bunny.colors), gl.STATIC_DRAW);
-    gl.enableVertexAttribArray(program.vertexColorAttr);
-    gl.vertexAttribPointer(program.vertexColorAttr, 3, gl.FLOAT, false, 0, 0);
-
-    var vboNormals = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, vboNormals);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(bunny.normals), gl.STATIC_DRAW);
-    gl.enableVertexAttribArray(program.vertexNormalAttr);
-    gl.vertexAttribPointer(program.vertexNormalAttr, 3, gl.FLOAT, false, 0, 0);
-
-    //Criar EBO, linkar e copiar os dados
-    var EBO = gl.createBuffer();
-	//Define o buffer como corrente e o define como buffer de elementos.
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, EBO);
-	//Aloca buffer e copia dados.
-    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(bunny.elements), gl.STATIC_DRAW);
-
+    var bunnyvao = Model.createVAO(gl, program, bunny);
     return bunnyvao;
 }
