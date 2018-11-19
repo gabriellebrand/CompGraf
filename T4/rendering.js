@@ -25,9 +25,7 @@ function onLoad(){
     initScene();
 
     //Desenhar a cena
-    //drawCubes();
-    //drawBunny();
-    drawSphere();
+    drawScene();
 }
 
 function initGL(){
@@ -41,7 +39,7 @@ function initGL(){
         gl.enable(gl.DEPTH_TEST);
 		
 		//Define cor de fundo.
-		gl.clearColor( 0, 0, 0, 1);
+		gl.clearColor(0, 0, 0, 1);
 		
 		//Salva as dimensões do canvas.
         gl.viewportWidth = canvas.width;
@@ -118,7 +116,7 @@ function initProgram(vertexShaderID, fragShaderID){
 
 function initScene(){
     //Posições da câmera
-    var eye = [20, 20, 20];
+    var eye = [0, 10, 10];
     var center = [0,0,0];
     var up = [0,1,0];
 
@@ -129,81 +127,41 @@ function initScene(){
     mat4.perspective(proj, 45, gl.viewportWidth / gl.viewportHeight, 0.1, 100.0);
 
     //Criar os objetos
-    var cube = Cube.createCubeData();
+    var cube = Cube.createCube();
+    let angle = Math.PI/4.0;
+    Model.transform(cube, [Math.cos(angle/2), 0, Math.sin(angle/2) , 0], [0, 0, 0], [1, 1, 1]);
     cube.vao = Cube.createCubeVAO(gl, program, cube);
     objects.push(cube);
 
     var bunny = Bunny.createBunny();
     bunny.vao = Bunny.createBunnyVAO(gl, program, bunny);
-    objects.push(bunny);
+    //objects.push(bunny);
 
-    var sphere = Sphere.createSphereData();
+    var sphere = Sphere.createSphere();
+    Model.transform(sphere, [0,0,0,0], [-5, 2, 5], [2, 2, 2]);
     sphere.vao = Sphere.createSphereVAO(gl, program, sphere);
-    objects.push(sphere);
+    //objects.push(sphere);
 }
 
-function drawSphere() {
+function drawScene() {
     //Definir tamanho e limpar a janela
     gl.viewport(0,0,gl.viewportWidth,gl.viewportHeight);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
     var ambientLight = vec3.fromValues(0.2, 0.2, 0.2);
-    var lightPos = vec4.fromValues(10.0, 10.0, 10.0, 1.0);
+    var lightPos = vec4.fromValues(10.0, 20.0, 10.0, 1.0);
     vec3.transformMat4(lightPos, lightPos, view);
 
-    gl.bindVertexArray(objects[2].vao);
+    for(let i = 0; i < objects.length; i++) {
+        gl.bindVertexArray(objects[i].vao);
 
-    var model = mat4.create();
-    var modelView = mat4.create();
-    var mvp = mat4.create();
-    var nm = mat4.create();
-
-    mat4.identity(model);
-
-    mat4.multiply(modelView,view,model);
-    mat4.multiply(mvp,proj,modelView);
-
-    mat4.invert(nm, modelView);
-    mat4.transpose(nm, nm);
-
-    gl.uniformMatrix4fv(program.mvUniform, false, modelView);
-    gl.uniformMatrix4fv(program.nmUniform, false, nm);
-    gl.uniformMatrix4fv(program.mvpUniform, false, mvp);
-
-    gl.uniform4fv(program.light, lightPos);
-    gl.uniform3fv(program.amb, ambientLight);
-    gl.uniform3fv(program.spc, objects[2].material.specular);
-    gl.uniform1f(program.shi, objects[2].material.shi);
-    
-    //Desenhar
-    gl.drawElements(gl.TRIANGLES, objects[2].elements.length, gl.UNSIGNED_SHORT, 0);
-
-    //Desabilitar buffers habilitados
-    gl.bindVertexArray(null);
-}
-
-function drawBunny() {
-        //Definir tamanho e limpar a janela
-        gl.viewport(0,0,gl.viewportWidth,gl.viewportHeight);
-        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-    
-        var ambientLight = vec3.fromValues(0.2, 0.2, 0.2);
-        var lightPos = vec4.fromValues(10.0, 10.0, 10.0, 1.0);
-        vec3.transformMat4(lightPos, lightPos, view);
-
-        gl.bindVertexArray(objects[1].vao);
-
-        var model = mat4.create();
+        var model = objects[i].model;
         var modelView = mat4.create();
         var mvp = mat4.create();
         var nm = mat4.create();
 
-        mat4.identity(model);
-        //mat4.translate(model,model,[0.0,0,0.0]);
-
-        mat4.identity(modelView);
-        mat4.multiply(modelView,view,model);
-        mat4.multiply(mvp,proj,modelView);
+        mat4.multiply(modelView, view,model);
+        mat4.multiply(mvp, proj, modelView);
 
         mat4.invert(nm, modelView);
         mat4.transpose(nm, nm);
@@ -214,68 +172,13 @@ function drawBunny() {
 
         gl.uniform4fv(program.light, lightPos);
         gl.uniform3fv(program.amb, ambientLight);
-        gl.uniform3fv(program.spc, objects[1].material.specular);
-        gl.uniform1f(program.shi, objects[1].material.shi);
+        gl.uniform3fv(program.spc, objects[i].material.specular);
+        gl.uniform1f(program.shi, objects[i].material.shi);
         
         //Desenhar
-        gl.drawElements(gl.TRIANGLES, objects[1].elements.length, gl.UNSIGNED_SHORT, 0);
+        gl.drawElements(gl.TRIANGLES, objects[i].elements.length, gl.UNSIGNED_SHORT, 0);
 
         //Desabilitar buffers habilitados
         gl.bindVertexArray(null);
-}
-
-function drawCubes(){
-    //Definir tamanho e limpar a janela
-    gl.viewport(0,0,gl.viewportWidth,gl.viewportHeight);
-    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-
-    var ambientLight = vec3.fromValues(0.2, 0.2, 0.2);
-    var lightPos = vec4.fromValues(10.0, 10.0, 10.0, 1.0);
-    vec3.transformMat4(lightPos, lightPos, view);
-
-    //Desenhar os objetos em diferentes posições
-    var model = mat4.create();
-    var modelView = mat4.create();
-    var mvp = mat4.create();
-    var nm = mat4.create();
-
-    gl.bindVertexArray(objects[0].vao);
-
-    for(let x = -5; x <= 5; x+=5 )
-    {
-        for(let z = -5; z <= 5; z+=5)
-        {
-            mat4.identity(model);
-            mat4.translate(model,model,[x,0,z]);
-
-            mat4.identity(modelView);
-            mat4.multiply(modelView,view,model);
-            mat4.multiply(mvp,proj,modelView);
-
-            mat4.invert(nm, modelView);
-            mat4.transpose(nm, nm);
-
-            gl.uniformMatrix4fv(program.mvUniform, false, modelView);
-            gl.uniformMatrix4fv(program.nmUniform, false, nm);
-            gl.uniformMatrix4fv(program.mvpUniform, false, mvp);
-
-            gl.uniform4fv(program.light, lightPos);
-            gl.uniform3fv(program.amb, ambientLight);
-            gl.uniform3fv(program.spc, objects[0].material.specular);
-            gl.uniform1f(program.shi, objects[0].material.shi);
-            
-            
-            //Desenhar
-            gl.drawElements(gl.TRIANGLES, objects[0].elements.length, gl.UNSIGNED_SHORT, 0);
-        }
     }
-
-    //Desabilitar buffers habilitados
-      gl.bindVertexArray(null);
-}
-
-function drawScene() {
-    //Definir tamanho e limpar a janela
-    gl.viewport(0,0,gl.viewportWidth,gl.viewportHeight);
-    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 }

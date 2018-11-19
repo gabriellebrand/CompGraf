@@ -50,6 +50,15 @@ Model.createVAO = function(gl, program, object) {
 
 }
 
+Model.transform = function(object, rotation, translation, scale) {
+    mat4.fromRotationTranslationScale(object.model, rotation, 
+                                      translation, scale);
+}
+
 Model.translate = function(object, x, y, z) {
     mat4.translate(object.model, object.model, [x, y, z]);
+}
+
+Model.scale = function() {
+
 }

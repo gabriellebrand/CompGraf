@@ -1,6 +1,6 @@
 var Cube = {};
 
-Cube.createCubeData = function() {
+Cube.createCube = function() {
     //Definir vértices e índices
     var vertices = [
         // Front face
@@ -35,7 +35,7 @@ Cube.createCubeData = function() {
         -1.0,  1.0, -1.0
       ];
 
-      var normals = [
+    var normals = [
         //Front
         0.0, 0.0, 1.0,
         0.0, 0.0, 1.0,
@@ -68,7 +68,6 @@ Cube.createCubeData = function() {
         -1.0, 0.0, 0.0,
     ];
 
-
     var colorsOfFaces = [
         [0.3, 0.6, 0.6],    // Front face: cyan
         [0.6, 0.3, 0.3],    // Back face: red
@@ -97,6 +96,9 @@ Cube.createCubeData = function() {
         20, 21, 22,     20, 22, 23    // left
     ];
 
+    var model = mat4.create();
+    mat4.identity(model);
+
     return {
         vertices: vertices,
         normals: normals,
@@ -105,7 +107,8 @@ Cube.createCubeData = function() {
         material: {
             specular: vec3.fromValues(0.5, 0.5, 0.5),
             shi: 32.0
-        }
+        },
+        model: model
     }
 }
 

@@ -1,6 +1,6 @@
 var Sphere = {};
 
-Sphere.createSphereData = function() {
+Sphere.createSphere = function() {
    /*http://en.wikipedia.org/wiki/Icosahedron
     * (0, ±1, ±φ)
     * (±1, ±φ, 0)

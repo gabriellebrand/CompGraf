@@ -23,6 +23,10 @@ Bunny.createBunny = function() {
     bunnyData.colors = color;
     bunnyData.material = { specular: vec3.fromValues(0.0, 0.0, 0.0), shi: 200.0 };
 
+    var model = mat4.create();
+    mat4.identity(model);
+    bunnyData.model = model;
+
     return bunnyData;
 }
 
