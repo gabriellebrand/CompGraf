@@ -7,15 +7,20 @@
   <link rel="shortcut icon" href="#" />
   <title>INF1761 - T4</title>
 </head>
-<body onload="onLoad()">
+<body onload="onLoad()" onkeypress="onKeyPress(event)">
   <canvas id="canvas" style="background-color: black" width="800" height="600"></canvas>
+  <br>
+  <button type="button" id="renderBtn" onclick="render1Pressed()">Iluminaçãoo por vértice</button>
+  <button type="button" id="renderBtn2" onclick="render2Pressed()">Iluminaçãoo por fragmento</button>
+  <br><br>
 
   <!--A versao precisa esta nessa posicao para evitar erros.-->
   <script id="vertexShaderSrc" type="notjs">#version 300 es
 
     in vec3 vertexPos;
     in vec3 vertexNormal;
-    in vec3 color;
+    
+    uniform vec3 color;
 
     uniform mat4 mv; 
     uniform mat4 nm; 
@@ -56,7 +61,6 @@
     precision mediump float;
 
     in vec3 colorv;
-	//a saida do fragment eh sempre um vec4
     out vec4 color;
 
     void main(void) {
@@ -69,7 +73,8 @@
 
     in vec3 vertexPos;
     in vec3 vertexNormal;
-    in vec3 color;
+
+    uniform vec3 color;
 
     uniform mat4 mv; 
     uniform mat4 nm; 
@@ -136,5 +141,6 @@
   <script src="./cube.js"></script>
   <script src="./sphere.js"></script>
   <script src="./rendering.js"></script>
+  <script src="./arcball.js"></script>
 </body>
 </html>

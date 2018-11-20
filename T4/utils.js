@@ -26,13 +26,6 @@ Model.createVAO = function(gl, program, object) {
 	//Diz que os atributos estao no buffer corrente.
     gl.vertexAttribPointer(program.vertexPosAttr, 3, gl.FLOAT, false, 0, 0);
 
-    //Criar VBO para cores, linkar e copiar os dados
-    var vboColor = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, vboColor);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(object.colors), gl.STATIC_DRAW);
-    gl.enableVertexAttribArray(program.vertexColorAttr);
-    gl.vertexAttribPointer(program.vertexColorAttr, 3, gl.FLOAT, false, 0, 0);
-
     var vboNormals = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, vboNormals);
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(object.normals), gl.STATIC_DRAW);
@@ -55,10 +48,20 @@ Model.transform = function(object, rotation, translation, scale) {
                                       translation, scale);
 }
 
-Model.translate = function(object, x, y, z) {
-    mat4.translate(object.model, object.model, [x, y, z]);
+Model.rotate = function(object, axis, angle) {
+    let rotation = mat4.create();
+    mat4.fromRotation(rotation, angle, axis);
+    mat4.multiply(object.model, rotation, object.model);
 }
 
-Model.scale = function() {
+Model.translate = function(object, translation) {
+    let translationMat = mat4.create();
+    mat4.translate(translationMat, translationMat, translation);
+    mat4.multiply(object.model, translationMat, object.model);
+}
 
+Model.scale = function(object, scale) {
+    let scaleMat = mat4.create();
+    mat4.scale(scaleMat, scaleMat, scale);
+    mat4.multiply(object.model, scaleMat, object.model);
 }

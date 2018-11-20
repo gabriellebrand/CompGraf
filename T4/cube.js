@@ -77,15 +77,15 @@ Cube.createCube = function() {
         [0.6, 0.3, 0.6]     // Left face: purple
     ];
 
-    var color = [];
+    var color = [0.8, 0.8, 0.8];
 
-    for (var j = 0; j < 6; j++) {
-        var polygonColor = colorsOfFaces[j];
+    // for (var j = 0; j < 6; j++) {
+    //     var polygonColor = colorsOfFaces[j];
 
-        for (var i = 0; i < 4; i++) {
-            color = color.concat(polygonColor);
-        }
-    }
+    //     for (var i = 0; i < 4; i++) {
+    //         color = color.concat(polygonColor);
+    //     }
+    // }
 
     var elements = [
         0,  1,  2,      0,  2,  3,    // front
@@ -103,7 +103,7 @@ Cube.createCube = function() {
         vertices: vertices,
         normals: normals,
         elements: elements,
-        colors: color,
+        color: color,
         material: {
             specular: vec3.fromValues(0.5, 0.5, 0.5),
             shi: 32.0

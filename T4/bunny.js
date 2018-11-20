@@ -15,12 +15,12 @@ Bunny.loadBunnyData = function() {
 Bunny.createBunny = function() {
     var bunnyData = this.loadBunnyData();
 
-    var color = []
-    for (let i = 0; i < bunnyData.vertices.length; i++) {
-        color = color.concat([0.8, 0.7, 0.8]);
-    }
+    // var color = []
+    // for (let i = 0; i < bunnyData.vertices.length; i++) {
+    //     color = color.concat([0.8, 0.7, 0.8]);
+    // }
 
-    bunnyData.colors = color;
+    bunnyData.color = [0.8, 0.7, 0.8];
     bunnyData.material = { specular: vec3.fromValues(0.0, 0.0, 0.0), shi: 200.0 };
 
     var model = mat4.create();

@@ -108,14 +108,11 @@ Sphere.createSphere = function() {
                             initialVertices[initialElements[i][2]], 3);
     }
 
-    colors = [];
+    color = [0.2, 0.2, 0.9];
 
-    for (let i = 0; i < vertices.length; i++) {
-        colors = colors.concat([0.3, 0.3, 0.8]);
-    }
-
-    console.log(vertices.length);
-    console.log(elements.length);
+    // for (let i = 0; i < vertices.length; i++) {
+    //     colors = colors.concat([0.3, 0.3, 0.8]);
+    // }
 
     var model = mat4.create();
     mat4.identity(model);
@@ -124,7 +121,7 @@ Sphere.createSphere = function() {
         vertices: vertices,
         normals: normals,
         elements: elements,
-        colors: colors,
+        color: color,
         material: {
             specular: vec3.fromValues(0.5, 0.5, 0.5),
             shi: 24.0
