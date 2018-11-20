@@ -13,47 +13,26 @@ var objects = [];
 //Matrizes de transformacao.
 var view, proj;
 
-var eye = [20, 0, 0];
+var eye = [20, 20, 20];
 var up = [0, 1, 0];
 var center = [0,0,0];
-
-var rotationQuat = quat.create();
 
 var vertexShader = "vertexShaderSrc2";
 var fragmentShader = "fragmentShaderSrc2";
 
 function render1Pressed() {
     vertexShader = "vertexShaderSrc";
-    fragmentShader = "fragmentShaderSrc";
-    
+    fragmentShader = "fragmentShaderSrc";   
     onLoad();
 }
 
 function render2Pressed() {
     vertexShader = "vertexShaderSrc2";
     fragmentShader = "fragmentShaderSrc2";
-
     onLoad();
 }
 
-function onKeyPress(event) {
-    let key = event.keyCode;
-    if (key == 119) { //w
-        console.log("w");
-    }
-    else if (key == 115) { //s
-        console.log("s");
-    }
-    else if (key == 97) { //a
-        console.log("a");
-    }
-    else if (key == 100) { //d
-        console.log("d");
-    }
-}
-
 function onLoad(){
-
     //Inicializar o contexto WebGL
     initGL();
 
@@ -168,10 +147,6 @@ function initScene(){
     Model.translate(cube, [0, -2, 0])
     cube.vao = Cube.createCubeVAO(gl, program, cube);
     objects.push(cube);
-
-    // var cube2 = Cube.createCube();
-    // cube2.vao = Cube.createCubeVAO(gl, program, cube2);
-    // objects.push(cube2);
 
     var bunny = Bunny.createBunny();
     Model.scale(bunny, [0.6, 0.6, 0.6]);

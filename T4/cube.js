@@ -67,25 +67,8 @@ Cube.createCube = function() {
         -1.0, 0.0, 0.0,
         -1.0, 0.0, 0.0,
     ];
-
-    var colorsOfFaces = [
-        [0.3, 0.6, 0.6],    // Front face: cyan
-        [0.6, 0.3, 0.3],    // Back face: red
-        [0.3, 0.6, 0.3],    // Top face: green
-        [0.3, 0.3, 0.6],    // Bottom face: blue
-        [0.6, 0.6, 0.3],    // Right face: yellow
-        [0.6, 0.3, 0.6]     // Left face: purple
-    ];
-
+    
     var color = [0.8, 0.8, 0.8];
-
-    // for (var j = 0; j < 6; j++) {
-    //     var polygonColor = colorsOfFaces[j];
-
-    //     for (var i = 0; i < 4; i++) {
-    //         color = color.concat(polygonColor);
-    //     }
-    // }
 
     var elements = [
         0,  1,  2,      0,  2,  3,    // front
