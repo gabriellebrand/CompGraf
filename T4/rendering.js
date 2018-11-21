@@ -170,9 +170,13 @@ function drawScene() {
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
     var ambientLight = vec3.fromValues(0.2, 0.2, 0.2);
-    var lightPos = vec4.fromValues(10.0, 10.0, 10.0, 1.0);
+    var lightPos = vec4.fromValues(0.0, 10.0, 0.0, 1.0);
+    var lightPos2 = vec4.fromValues(10.0, 10.0, 10.0, 1.0);
     vec3.transformMat4(lightPos, lightPos, view);
-
+    vec3.transformMat4(lightPos2, lightPos2, view);
+    
+    var lights = [lightPos[0], lightPos[1],lightPos[2], lightPos[3], lightPos2[0], lightPos2[1],lightPos2[2], lightPos2[3]];
+    
     for(let i = 0; i < objects.length; i++) {
         gl.bindVertexArray(objects[i].vao);
 
@@ -192,7 +196,7 @@ function drawScene() {
         gl.uniformMatrix4fv(program.mvpUniform, false, mvp);
 
         gl.uniform3fv(program.colorUniform, objects[i].color);
-        gl.uniform4fv(program.light, lightPos);
+        gl.uniform4fv(program.light, lights);
         gl.uniform3fv(program.amb, ambientLight);
         gl.uniform3fv(program.spc, objects[i].material.specular);
         gl.uniform1f(program.shi, objects[i].material.shi);

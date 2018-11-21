@@ -80,7 +80,7 @@
     uniform mat4 nm; 
     uniform mat4 mvp;
 
-    uniform vec4 leye;
+    uniform vec4 leye[2];
 
     out vec3 normal;
     out vec3 light;
@@ -90,8 +90,8 @@
     void main() {
       vec3 veye = vec3(mv*vec4(vertexPos, 1.0));
     
-      if (leye.w == 0.0) light = normalize(vec3(leye));
-      else               light = normalize(vec3(leye) - veye); 
+      if (leye[0].w == 0.0) light = normalize(vec3(leye[0]));
+      else               light = normalize(vec3(leye[0]) - veye); 
 
       normal = normalize(vec3(nm*vec4(vertexNormal, 0.0)));
 
