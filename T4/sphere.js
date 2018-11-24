@@ -54,6 +54,7 @@ Sphere.createSphere = function() {
     var vertices = [];
     var elements = [];
     var normals = [];
+    var colors = [];
 
     var triangleSubdivision = function (v1, v2, v3, depth) {
         if (depth == 0) {
@@ -108,11 +109,7 @@ Sphere.createSphere = function() {
                             initialVertices[initialElements[i][2]], 3);
     }
 
-    color = [0.2, 0.2, 0.9];
-
-    // for (let i = 0; i < vertices.length; i++) {
-    //     colors = colors.concat([0.3, 0.3, 0.8]);
-    // }
+    colors = Model.fakeTexture(vertices.length);
 
     var model = mat4.create();
     mat4.identity(model);
@@ -120,17 +117,12 @@ Sphere.createSphere = function() {
     return {
         vertices: vertices,
         normals: normals,
+        colors: colors,
         elements: elements,
-        color: color,
         material: {
-            specular: vec3.fromValues(0.5, 0.5, 0.5),
+            specular: [0.5, 0.5, 0.5],
             shi: 24.0
         },
         model: model
     }
-}
-
-Sphere.createSphereVAO = function(gl, program, sphere) {
-    var spherevao = Model.createVAO(gl, program, sphere);
-    return spherevao;
 }

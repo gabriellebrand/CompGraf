@@ -13,24 +13,20 @@ Bunny.loadBunnyData = function() {
 }
 
 Bunny.createBunny = function() {
+    //carrega os vertices e as normais
     var bunnyData = this.loadBunnyData();
 
-    // var color = []
-    // for (let i = 0; i < bunnyData.vertices.length; i++) {
-    //     color = color.concat([0.8, 0.7, 0.8]);
-    // }
+    color = [Math.random() + 0.5, Math.random() + 0.5, Math.random() + 0.5];
+    bunnyData.colors = Model.solidColorBuffer(bunnyData.vertices.length, color);
 
-    bunnyData.color = [0.8, 0.7, 0.8];
-    bunnyData.material = { specular: vec3.fromValues(0.0, 0.0, 0.0), shi: 200.0 };
+    bunnyData.material = { 
+        specular: [0.8, 0.8, 0.8], 
+        shi: 30.0 
+    };
 
     var model = mat4.create();
     mat4.identity(model);
     bunnyData.model = model;
 
     return bunnyData;
-}
-
-Bunny.createBunnyVAO = function(gl, program, bunny) {
-    var bunnyvao = Model.createVAO(gl, program, bunny);
-    return bunnyvao;
 }

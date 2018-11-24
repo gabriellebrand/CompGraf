@@ -32,6 +32,12 @@ Model.createVAO = function(gl, program, object) {
     gl.enableVertexAttribArray(program.vertexNormalAttr);
     gl.vertexAttribPointer(program.vertexNormalAttr, 3, gl.FLOAT, false, 0, 0);
 
+    var vboColors = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, vboColors);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(object.colors), gl.STATIC_DRAW);
+    gl.enableVertexAttribArray(program.vertexColorAttr);
+    gl.vertexAttribPointer(program.vertexColorAttr, 3, gl.FLOAT, false, 0, 0);
+
     //Criar EBO, linkar e copiar os dados
     var EBO = gl.createBuffer();
 	//Define o buffer como corrente e o define como buffer de elementos.
@@ -40,12 +46,28 @@ Model.createVAO = function(gl, program, object) {
     gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(object.elements), gl.STATIC_DRAW);
 
     return vao;
-
 }
 
-Model.transform = function(object, rotation, translation, scale) {
-    mat4.fromRotationTranslationScale(object.model, rotation, 
-                                      translation, scale);
+Model.solidColorBuffer = function(size, color) {
+    var newColors = [];
+    for (let i = 0; i < size; i++) {
+        newColors = newColors.concat(color);
+    }
+
+    return newColors;
+}
+
+Model.fakeTexture = function(size) {
+    var newColors = [];
+    let solid = [Math.random(), Math.random(), Math.random()];
+    for (let i = 0; i < size; i++) {
+        let luminosity = Math.random();
+        newColors = newColors.concat([solid[0]*0.8 + 0.2*luminosity, 
+                                      solid[1]*0.8 + 0.2*luminosity, 
+                                      solid[2]*0.8 + 0.2*luminosity]);
+    }
+
+    return newColors;
 }
 
 Model.rotate = function(object, axis, angle) {

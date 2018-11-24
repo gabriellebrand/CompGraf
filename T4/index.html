@@ -10,8 +10,11 @@
 <body onload="onLoad()">
   <canvas id="canvas" style="background-color: black" width="800" height="600"></canvas>
   <br>
-  <button type="button" id="renderBtn" onclick="render1Pressed()">Iluminação por vértice</button>
-  <button type="button" id="renderBtn2" onclick="render2Pressed()">Iluminação por fragmento</button>
+  <button type="button" id="renderVertBtn" onclick="renderVertexPressed()">Iluminação por vértice</button>
+  <button type="button" id="renderFragBtn" onclick="renderFragPressed()">Iluminação por fragmento</button>
+  <br>
+  <button type="button" id="renderBtn" onclick="render1Pressed()">Cena easter eggs</button>
+  <button type="button" id="renderBtn2" onclick="render2Pressed()">Cena notas de aula</button>
   <br><br>
 
   <!--A versao precisa esta nessa posicao para evitar erros.-->
@@ -19,39 +22,52 @@
 
     in vec3 vertexPos;
     in vec3 vertexNormal;
-    
-    uniform vec3 color;
+    in vec3 color;
 
     uniform mat4 mv; 
     uniform mat4 nm; 
     uniform mat4 mvp;
 
-    uniform vec4 leye;
+    //luzes pontuais da cena
+    uniform vec4 leye[2];
+    //intensidade da luz pontual
+    uniform vec3 lcolor[2];
 
     uniform vec3 amb; 
-    uniform vec3 dif; 
     uniform vec3 spc; 
     uniform float shi; 
 
     out vec3 colorv;
 
     void main() {
+      //aplica cor ambiente
+      colorv.x =  amb.x*color.x;
+      colorv.y =  amb.y*color.y;
+      colorv.z =  amb.z*color.z;
+      
       vec3 veye = vec3(mv*vec4(vertexPos, 1.0));
-     
-      vec3 light;
-      if (leye.w == 0.0) light = normalize(vec3(leye));
-      else                   light = normalize(vec3(leye) - veye); 
-
       vec3 normal = normalize(vec3(nm*vec4(vertexNormal, 0.0)));
-      float ndotl = dot(normal, light);
+     
+      //loop
+      for (int i = 0; i < 2; i++) {
+        vec3 light;
+        if (leye[0].w == 0.0) light = normalize(vec3(leye[i]));
+        else                  light = normalize(vec3(leye[i]) - veye); 
 
-      colorv =  vec3((0.2 + max(0.0, ndotl))*color);
+        float ndotl = max(0.0, dot(normal, light));
 
-      if ((ndotl > 0.0) && (shi > 0.0)) {
+        //contribuicao especular
+        colorv.x += lcolor[i].x*ndotl*color[0];
+        colorv.y += lcolor[i].y*ndotl*color[1];
+        colorv.z += lcolor[i].z*ndotl*color[2];
+
+        //contribuicao especular
         vec3 refl = normalize(reflect(-light, normal));
-        colorv += 1.0*pow(max(0.0, dot(refl, normalize(-veye))), shi);
+        float specFactor = pow(max(0.0, dot(refl, normalize(-veye))), shi);
+        colorv.x += specFactor*spc.x;
+        colorv.y += specFactor*spc.y;
+        colorv.z += specFactor*spc.z;
       }
-
       gl_Position = mvp * vec4(vertexPos, 1.0);
     }
 
@@ -73,8 +89,7 @@
 
     in vec3 vertexPos;
     in vec3 vertexNormal;
-
-    uniform vec3 color;
+    in vec3 color;
 
     uniform mat4 mv; 
     uniform mat4 nm; 
@@ -82,24 +97,25 @@
 
     uniform vec4 leye[2];
 
-    out vec3 normal;
-    out vec3 light;
-    out vec3 ve;
     out vec3 colorv;
+    out vec3 normal;
+    out vec3 ve;
+    //vetor direcao de cada luz
+    out vec3 light[2];
 
     void main() {
       vec3 veye = vec3(mv*vec4(vertexPos, 1.0));
     
-      if (leye[0].w == 0.0) light = normalize(vec3(leye[0]));
-      else               light = normalize(vec3(leye[0]) - veye); 
+      for (int i = 0; i < 2; i++) {
+        if (leye[i].w == 0.0) light[i] = normalize(vec3(leye[i]));
+        else               light[i] = normalize(vec3(leye[i]) - veye); 
+      }
 
       normal = normalize(vec3(nm*vec4(vertexNormal, 0.0)));
-
       ve = normalize(-veye);
 
-      colorv = color;
-
       gl_Position = mvp * vec4(vertexPos, 1.0);
+      colorv = color;
     }
 
   </script>
@@ -109,31 +125,45 @@
       precision mediump float;
   
       in vec3 normal;
-      in vec3 light;
+      in vec3 light[2];
       in vec3 ve;
       in vec3 colorv;
 
+      //intensidade da luz pontual
+      uniform vec3 lcolor[2];
+      
       uniform vec3 amb;
-      uniform vec3 dif;
       uniform vec3 spc;
       uniform float shi;
 
       //a saida do fragment eh sempre um vec4
-      out vec4 color;
+      out vec4 colorf;
   
       void main(void) {
-        float ndotl = dot(normal, light);
-        color =  vec4((0.2 + max(0.0, ndotl))*colorv, 1.0);
-        
-        if ((ndotl > 0.0) && (shi > 0.0)) {
-          vec3 rl = normalize(reflect(-light, normal));
-          color += 1.0*pow(max(0.0, dot(rl, ve)), shi);
+        //aplica cor ambiente
+        colorf.x =  amb.x*colorv.x;
+        colorf.y =  amb.y*colorv.y;
+        colorf.z =  amb.z*colorv.z;
+       
+        //loop
+        for (int i = 0; i < 2; i++) {
+          float ndotl = max(0.0, dot(normal, light[i]));
+  
+          //contribuicao difusa
+          colorf.x += lcolor[i].x*ndotl*colorv[0];
+          colorf.y += lcolor[i].y*ndotl*colorv[1];
+          colorf.z += lcolor[i].z*ndotl*colorv[2];
+  
+          //contribuicao especular
+          vec3 refl = normalize(reflect(-light[i], normal));
+          float specFactor = pow(max(0.0, dot(refl, normalize(ve))), shi);
+          colorf.x += specFactor*spc.x;
+          colorf.y += specFactor*spc.y;
+          colorf.z += specFactor*spc.z;
         }
       }
   
     </script>
-
-
 
   <script src="./gl-matrix-min.js"></script>
   <script src="./utils.js"></script>

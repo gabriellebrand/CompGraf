@@ -67,8 +67,6 @@ Cube.createCube = function() {
         -1.0, 0.0, 0.0,
         -1.0, 0.0, 0.0,
     ];
-    
-    var color = [0.8, 0.8, 0.8];
 
     var elements = [
         0,  1,  2,      0,  2,  3,    // front
@@ -79,23 +77,20 @@ Cube.createCube = function() {
         20, 21, 22,     20, 22, 23    // left
     ];
 
+    var colors = Model.solidColorBuffer(vertices.length, [0.5, 0.7, 0.3]);
+
     var model = mat4.create();
     mat4.identity(model);
 
     return {
         vertices: vertices,
         normals: normals,
+        colors: colors,
         elements: elements,
-        color: color,
         material: {
-            specular: vec3.fromValues(0.5, 0.5, 0.5),
-            shi: 32.0
+            specular: [0.0, 0.0, 0.0],  // sem reflexao especular
+            shi: 20.0
         },
         model: model
     }
-}
-
-Cube.createCubeVAO = function(gl, program, cube) {
-    var cubevao = Model.createVAO(gl, program, cube);
-    return cubevao;
 }
